@@ -2,3 +2,4 @@
 - Christian Duffoo
 - Guilherme Vilatoro Taglianeti
 - Seth Gleason
+- Silas Bucur

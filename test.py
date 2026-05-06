@@ -1,30 +1,180 @@
-
+import os
+import sys
+import csv
+import io
 import ast
 import re
+from pyspark.sql import SparkSession
+from pyspark.sql.types import (
+    IntegerType, StringType, ArrayType,
+    StructField, StructType
+)
+from pyspark.sql.functions import col, udf, size
+
+os.environ["HADOOP_HOME"] = r"D:\hadoop-3.5.5-bin"
+os.environ["PATH"] = os.environ["HADOOP_HOME"] + r"\bin;" + os.environ["PATH"]
+os.environ["PYSPARK_PYTHON"] = f'"{sys.executable}"'
+os.environ["PYSPARK_DRIVER_PYTHON"] = f'"{sys.executable}"'
 
 
-txt = """[{'credit_id': '5861979792514115c0035365', 'department': 'Costume & Make-Up', 'gender': 0, 'id': 1458084, 'job': 'Hairstylist', 'name': ""Chantal Boom'la"", 'profile_path': None}, {'credit_id': '58617944c3a3681a72037619', 'department': 'Production', 'gender': 0, 'id': 1493438, 'job': 'Associate Producer', 'name': 'Nina Blake', 'profile_path': None}, {'credit_id': '58619853c3a3681a620371d7', 'department': 'Sound', 'gender': 0, 'id': 1550619, 'job': 'Music Editor', 'name': 'Joanie Diener', 'profile_path': None}, {'credit_id': '586195d09251414e3a01000c', 'department': 'Production', 'gender': 1, 'id': 1593518, 'job': 'Line Producer', 'name': 'Dana Satler Hankins', 'profile_path': None}, {'credit_id': '58617aea92514115c40356e2', 'department': 'Production', 'gender': 1, 'id': 1593544, 'job': 'Producer', 'name': 'Lisa Onodera', 'profile_path': None}, {'credit_id': '586196aa92514115d30359ed', 'department': 'Directing', 'gender': 0, 'id': 1614184, 'job': 'Script Supervisor', 'name': 'Irish Barber', 'profile_path': None}, {'credit_id': '586197b992514115c703627e', 'department': 'Camera', 'gender': 0, 'id': 1614184, 'job': 'Grip', 'name': 'Irish Barber', 'profile_path': None}, {'credit_id': '586177c692514115cf032d30', 'department': 'Costume & Make-Up', 'gender': 0, 'id': 1728248, 'job': 'Costume Design', 'name': 'Ada Akaji', 'profile_path': None}, {'credit_id': '5861782f92514115c7034360', 'department': 'Art', 'gender': 0, 'id': 1728249, 'job': 'Production Design', 'name': 'Paul Guncheon', 'profile_path': None}, {'credit_id': '5861793d92514115c40354fe', 'department': 'Production', 'gender': 0, 'id': 1728250, 'job': 'Associate Producer', 'name': 'Eleanor R. Nakama', 'profile_path': None}, {'credit_id': '586179b0c3a3681a68038bf2', 'department': 'Production', 'gender': 0, 'id': 1728251, 'job': 'Co-Executive Producer', 'name': 'Paul Mayersohn', 'profile_path': None}, {'credit_id': '58617ac7c3a3681a68038d3c', 'department': 'Writing', 'gender': 0, 'id': 1728252, 'job': 'Screenplay', 'name': 'Mari Hatta', 'profile_path': None}, {'credit_id': '58617a1292514115be032fc2', 'department': 'Writing', 'gender': 0, 'id': 1728252, 'job': 'Story', 'name': 'Mari Hatta', 'profile_path': None}, {'credit_id': '58617ad2c3a3681a7d0308fc', 'department': 'Production', 'gender': 0, 'id': 1728253, 'job': 'Executive Producer', 'name': 'Diane Mei Lin Mark', 'profile_path': None}, {'credit_id': '58617a2f92514115c00336ff', 'department': 'Writing', 'gender': 0, 'id': 1728253, 'job': 'Story', 'name': 'Diane Mei Lin Mark', 'profile_path': None}, {'credit_id': '5861935e92514115cf0346da', 'department': 'Production', 'gender': 0, 'id': 1728294, 'job': 'Casting', 'name': 'Anna Fishburn', 'profile_path': None}, {'credit_id': '5861948d92514115c40370f7', 'department': 'Production', 'gender': 1, 'id': 1728296, 'job': 'Casting', 'name': 'Yumi Takada', 'profile_path': None}, {'credit_id': '586195f8c3a3681a650306c8', 'department': 'Production', 'gender': 0, 'id': 1728297, 'job': 'Production Coordinator', 'name': 'Marilyn Carrera Killeri', 'profile_path': None}, {'credit_id': '5861960c92514115be034aa4', 'department': 'Directing', 'gender': 0, 'id': 1728298, 'job': 'Script Supervisor', 'name': 'Summer Banner', 'profile_path': None}, {'credit_id': '586196539251414e3a01007e', 'department': 'Directing', 'gender': 1, 'id': 1728299, 'job': 'Script Supervisor', 'name': 'Angela Robinson', 'profile_path': None}, {'credit_id': '586196a392514115be034b1f', 'department': 'Directing', 'gender': 0, 'id': 1728302, 'job': 'Script Supervisor', 'name': 'Janet Holman', 'profile_path': None}, {'credit_id': '586196bdc3a3681a6203701e', 'department': 'Camera', 'gender': 0, 'id': 1728303, 'job': 'First Assistant Camera', 'name': 'Mike Weisbrod', 'profile_path': None}, {'credit_id': '586196fdc3a3681a6803aa1d', 'department': 'Sound', 'gender': 0, 'id': 1728304, 'job': 'Sound Mixer', 'name': 'Susan Moore-Chong', 'profile_path': None}, {'credit_id': '58619755c3a3681a77034827', 'department': 'Sound', 'gender': 0, 'id': 1728307, 'job': 'Boom Operator', 'name': 'John Reynolds', 'profile_path': None}, {'credit_id': '58619762c3a3681a77034836', 'department': 'Art', 'gender': 0, 'id': 1728308, 'job': 'Construction Coordinator', 'name': 'Shell Dalzell', 'profile_path': None}, {'credit_id': '5861976cc3a3681a6f03483a', 'department': 'Crew', 'gender': 0, 'id': 1728309, 'job': 'Property Master', 'name': 'Leslie Craig', 'profile_path': None}, {'credit_id': '5861977a92514115c40373bc', 'department': 'Costume & Make-Up', 'gender': 0, 'id': 1728310, 'job': 'Makeup Department Head', 'name': 'Bryan Furer', 'profile_path': None}, {'credit_id': '5861978692514115be034bf4', 'department': 'Costume & Make-Up', 'gender': 0, 'id': 1728311, 'job': 'Hair Department Head', 'name': 'Newton Koshi', 'profile_path': None}, {'credit_id': '5861978ec3a3681a620370f9', 'department': 'Costume & Make-Up', 'gender': 0, 'id': 1728313, 'job': 'Makeup Artist', 'name': 'Cindy Stratt', 'profile_path': None}, {'credit_id': '586197a8c3a3681a6503082e', 'department': 'Costume & Make-Up', 'gender': 0, 'id': 1728314, 'job': 'Assistant Costume Designer', 'name': 'Michael Pacciorini', 'profile_path': None}, {'credit_id': '586197bf92514115c003538b', 'department': 'Camera', 'gender': 0, 'id': 1728315, 'job': 'Grip', 'name': 'Kolo Barber', 'profile_path': None}, {'credit_id': '586197f9c3a3681a6203716c', 'department': 'Lighting', 'gender': 0, 'id': 1728316, 'job': 'Gaffer', 'name': 'Bob Johnson', 'profile_path': None}, {'credit_id': '58619804c3a3681a6b035254', 'department': 'Lighting', 'gender': 0, 'id': 1728317, 'job': 'Gaffer', 'name': 'Dave Sullivan', 'profile_path': None}, {'credit_id': '5861981a9251414e3a010205', 'department': 'Crew', 'gender': 0, 'id': 1728318, 'job': 'Post Production Supervisor', 'name': 'Mary F. Jansen', 'profile_path': None}, {'credit_id': '586198e992514115cf034c5a', 'department': 'Editing', 'gender': 0, 'id': 1728326, 'job': 'Dialogue Editor', 'name': 'Barbara McBain', 'profile_path': None}, {'credit_id': '5861993492514115c703640e', 'department': 'Crew', 'gender': 0, 'id': 1728329, 'job': 'Special Effects', 'name': 'Archie Ahuna', 'profile_path': None}, {'credit_id': '5861994192514115d3035c6f', 'department': 'Crew', 'gender': 0, 'id': 1728331, 'job': 'Special Effects', 'name': 'Mike van Arkel', 'profile_path': None}, {'credit_id': '5861996992514115c703643d', 'department': 'Crew', 'gender': 0, 'id': 1728333, 'job': 'Post Production Assistant', 'name': 'Francis Badzey', 'profile_path': None}, {'credit_id': '58619972c3a3681a6803ac95', 'department': 'Crew', 'gender': 0, 'id': 1728334, 'job': 'Post Production Assistant', 'name': 'Bruce Westcott', 'profile_path': None}, {'credit_id': '5861999092514115cf034d03', 'department': 'Crew', 'gender': 0, 'id': 1728335, 'job': 'Unit Publicist', 'name': 'Karen Kodner', 'profile_path': None}, {'credit_id': '5861999c92514115c40375bb', 'department': 'Crew', 'gender': 0, 'id': 1728336, 'job': 'Unit Publicist', 'name': 'Yuki Sakamura', 'profile_path': None}, {'credit_id': '586199b3c3a3681a6803acdb', 'department': 'Editing', 'gender': 0, 'id': 1728338, 'job': 'Color Timer', 'name': 'Ray Morfino', 'profile_path': None}]"""
+spark = SparkSession.builder.appName("CreditsParser").getOrCreate()
 
-def clean_and_parse(s : str):
+
+# ---------------------------------------------------------------------------
+# Schemas
+# ---------------------------------------------------------------------------
+
+cast_schema = ArrayType(StructType([
+    StructField("cast_id",      IntegerType(), nullable=True),
+    StructField("character",    StringType(),  nullable=True),
+    StructField("credit_id",    StringType(),  nullable=True),
+    StructField("gender",       IntegerType(), nullable=True),
+    StructField("id",           IntegerType(), nullable=True),
+    StructField("name",         StringType(),  nullable=True),
+    StructField("order",        IntegerType(), nullable=True),
+    StructField("profile_path", StringType(),  nullable=True),
+]))
+
+crew_schema = ArrayType(StructType([
+    StructField("credit_id",    StringType(),  nullable=True),
+    StructField("department",   StringType(),  nullable=True),
+    StructField("gender",       IntegerType(), nullable=True),
+    StructField("id",           IntegerType(), nullable=True),
+    StructField("job",          StringType(),  nullable=True),
+    StructField("name",         StringType(),  nullable=True),
+    StructField("profile_path", StringType(),  nullable=True),
+]))
+
+flat_schema = StructType([
+    StructField("cast", StringType(),  nullable=True),
+    StructField("crew", StringType(),  nullable=True),
+    StructField("id",   IntegerType(), nullable=False),
+])
+
+
+# ---------------------------------------------------------------------------
+# CSV line parser
+# ---------------------------------------------------------------------------
+
+def parse_line(line: str):
+    try:
+        reader = csv.reader(
+            io.StringIO(line),
+            quotechar='"',
+            skipinitialspace=True
+        )
+        row = next(reader)
+        if len(row) < 3:
+            return None
+        return (row[0], row[1], int(row[2].strip()))
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Per-object credit parser (robust to mixed/escaped quotes)
+# ---------------------------------------------------------------------------
+
+CAST_KEYS = ["cast_id", "character", "credit_id", "gender", "id", "name", "order", "profile_path"]
+CREW_KEYS = ["credit_id", "department", "gender", "id", "job", "name", "profile_path"]
+
+
+def _parse_credits_list(s: str, field_keys: list) -> list:
+    """
+    Parse a Python-literal list-of-dicts string, processing each dict
+    independently so a single malformed entry doesn't drop the whole row.
+
+    Handles the tricky case of CSV-escaped double quotes inside string values
+    that also contain single quotes, e.g.:
+        'character': ""Nelson - Dithers' Employee""
+    """
     if not s:
         return []
-    try:
-        # Remove the outer wrapping quote if present (CSV artifact)
-        s = s.strip()
-        if s.startswith('"') and s.endswith('"'):
-            s = s[1:-1]
-        
-        # Replace CSV-escaped double quotes "" with a placeholder,
-        # then convert to proper single-quoted string
-       
-        s = re.sub(r'""(.*?)""', lambda m: '"' + m.group(1).replace("'", "\\'") + '"', s)
-        
-        return ast.literal_eval(s)
-    except Exception as e:
-        print(f"Failed to parse: {e}")
-        print(f"String was: {s[:100]}")
-        return []
-    
 
-result = clean_and_parse(txt)
-print(result)
+    s = s.strip()
+
+    # Strip outer wrapping quote added by CSV reader
+    if s.startswith('"') and s.endswith('"'):
+        s = s[1:-1]
+    
+    open_braces = s.count('{') - s.count('}')
+    if open_braces > 0:
+        s += '}' * open_braces
+    # Replace CSV-escaped double-quotes ("") with a null-byte placeholder
+    # so they don't interfere with splitting or ast.literal_eval.
+    s = s.replace('""', '\x00')
+
+    # Extract individual {...} dict strings from the list
+    objects = re.findall(r'\{[^{}]*\}', s)
+
+    result = []
+    for obj_str in objects:
+        try:
+            # Restore placeholder as an escaped single quote so
+            # ast.literal_eval sees a valid string literal.
+            obj_str = obj_str.replace('\x00', "\\'")
+            parsed = ast.literal_eval(obj_str)
+            if isinstance(parsed, dict):
+                result.append({k: parsed.get(k) for k in field_keys})
+        except Exception as e:
+            # Skip this one bad object; keep everything else
+            #obj_str = obj_str.replace('\x00', "\\'")
+            #print(obj_str)
+            continue
+
+    return result
+
+
+def parse_cast(s: str):
+    return _parse_credits_list(s, CAST_KEYS)
+
+
+def parse_crew(s: str):
+    return _parse_credits_list(s, CREW_KEYS)
+
+
+cast_udf = udf(parse_cast, cast_schema)
+crew_udf = udf(parse_crew, crew_schema)
+
+
+# ---------------------------------------------------------------------------
+# Build DataFrame
+# ---------------------------------------------------------------------------
+
+sc = spark.sparkContext
+
+raw_rdd = sc.textFile("bronze_data_sample/credits.csv")
+header  = raw_rdd.first()
+data_rdd = raw_rdd.filter(lambda line: line != header)
+
+parsed_rdd = (
+    data_rdd
+    .map(parse_line)
+    .filter(lambda x: x is not None)
+)
+
+df_credits = spark.createDataFrame(parsed_rdd, schema=flat_schema)
+
+df_credits_clean = (
+    df_credits
+    .withColumn("cast", cast_udf(col("cast")))
+    .withColumn("crew", crew_udf(col("crew")))
+)
+
+# ---------------------------------------------------------------------------
+# Inspect results
+# ---------------------------------------------------------------------------
+
+df_credits_clean.printSchema()
+df_credits_clean.orderBy("id").show(truncate=80)
+
+print(f"Parsed rows : {df_credits_clean.count()}")
+print(f"Raw rows    : {data_rdd.count()}")
+
+print(df_credits_clean.filter(size(col("cast")) == 0).count())
+print(df_credits_clean.select(col("id")).filter(size(col("cast")) == 0).collect())
+
+
+print(df_credits_clean.filter(size(col("crew")) == 0).count())
+print(df_credits_clean.select(col("id")).filter(size(col("crew")) == 0).collect())
+

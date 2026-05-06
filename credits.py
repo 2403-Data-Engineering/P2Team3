@@ -3,8 +3,13 @@ import sys
 import csv
 import io
 import ast
-from pyspark import SparkContext
+import re
 from pyspark.sql import SparkSession
+from pyspark.sql.types import (
+    IntegerType, StringType, ArrayType,
+    StructField, StructType
+)
+from pyspark.sql.functions import col, udf, size
 
 os.environ["HADOOP_HOME"] = r"D:\hadoop-3.5.5-bin"
 os.environ["PATH"] = os.environ["HADOOP_HOME"] + r"\bin;" + os.environ["PATH"]
@@ -12,12 +17,12 @@ os.environ["PYSPARK_PYTHON"] = f'"{sys.executable}"'
 os.environ["PYSPARK_DRIVER_PYTHON"] = f'"{sys.executable}"'
 
 
-from pyspark.sql.types import IntegerType, StringType, ArrayType, StructField, StructType, MapType
-from pyspark.sql.functions import from_json, col, regexp_replace, udf
+spark = SparkSession.builder.appName("CreditsParser").getOrCreate()
 
 
-spark = SparkSession.builder.appName("WordCount").getOrCreate()
-
+# ---------------------------------------------------------------------------
+# Schemas
+# ---------------------------------------------------------------------------
 
 cast_schema = ArrayType(StructType([
     StructField("cast_id",      IntegerType(), nullable=True),
@@ -40,30 +45,19 @@ crew_schema = ArrayType(StructType([
     StructField("profile_path", StringType(),  nullable=True),
 ]))
 
-credits_schema = StructType([
-    StructField("cast", ArrayType(cast_schema), nullable=True),
-    StructField("crew", ArrayType(crew_schema), nullable=True),
-    StructField("id",   IntegerType(),          nullable=False),
-])
-
 flat_schema = StructType([
-    StructField("cast", StringType(), nullable=True),
-    StructField("crew", StringType(), nullable=True),
+    StructField("cast", StringType(),  nullable=True),
+    StructField("crew", StringType(),  nullable=True),
     StructField("id",   IntegerType(), nullable=False),
 ])
 
 
-sc = spark.sparkContext
+# ---------------------------------------------------------------------------
+# CSV line parser
+# ---------------------------------------------------------------------------
 
-raw_rdd = sc.textFile("bronze_data_sample/credits.csv")
-
-# Skip header if present
-header = raw_rdd.first()
-data_rdd = raw_rdd.filter(lambda line: line != header)
-
-def parse_line(line):
+def parse_line(line: str):
     try:
-        # Use QUOTE_NONE to avoid misreading escaped/nested quotes
         reader = csv.reader(
             io.StringIO(line),
             quotechar='"',
@@ -72,111 +66,172 @@ def parse_line(line):
         row = next(reader)
         if len(row) < 3:
             return None
-        cast_str  = row[0]
-        crew_str  = row[1]
-        movie_id  = int(row[2].strip())
-        return (cast_str, crew_str, movie_id)
+        return (row[0], row[1], int(row[2].strip()))
     except Exception:
         return None
 
-parsed_rdd = data_rdd \
-    .map(parse_line) \
-    .filter(lambda x: x is not None)
 
-flat_schema = StructType([
-    StructField("cast", StringType(),  nullable=True),
-    StructField("crew", StringType(),  nullable=True),
-    StructField("id",   IntegerType(), nullable=False),
-])
+# ---------------------------------------------------------------------------
+# Per-object credit parser 
+# ---------------------------------------------------------------------------
 
-df_credits = spark.createDataFrame(parsed_rdd, schema=flat_schema)
-df_credits.show()
-df_credits.printSchema()
+CAST_KEYS = ["cast_id", "character", "credit_id", "gender", "id", "name", "order", "profile_path"]
+CREW_KEYS = ["credit_id", "department", "gender", "id", "job", "name", "profile_path"]
 
 
+def _parse_credits_list(s: str, field_keys: list) -> list:
+    """
+    Parse a Python-literal list-of-dicts string, processing each dict
+    independently so a single malformed entry doesn't drop the whole row.
 
-
-
-def parse_cast(s):
+    Handles the tricky case of CSV-escaped double quotes inside string values
+    that also contain single quotes, e.g.:
+        'character': ""Nelson - Dithers' Employee""
+    """
     if not s:
         return []
-    try:
-        # Remove the outer wrapping quote if present (CSV artifact)
-        s = s.strip()
-        if s.startswith('"') and s.endswith('"'):
-            s = s[1:-1]
-        
-        # Replace CSV-escaped double quotes "" with a placeholder,
-        # then convert to proper single-quoted string
-        s = s.replace('""', "'")
 
-        parsed = ast.literal_eval(s)
-        
-        # Ensure every item is a dict, not a tuple
-        result = []
-        for item in parsed:
-            if isinstance(item, dict):
-                result.append({
-                    "cast_id":      item.get("cast_id"),
-                    "character":    item.get("character"),
-                    "credit_id":    item.get("credit_id"),
-                    "gender":       item.get("gender"),
-                    "id":           item.get("id"),
-                    "name":         item.get("name"),
-                    "order":        item.get("order"),
-                    "profile_path": item.get("profile_path"),
-                })
-        return result
-    except Exception:
-        return []
+    s = s.strip()
 
-def parse_crew(s):
-    if not s:
-        return []
-    try:
-        # Remove the outer wrapping quote if present (CSV artifact)
-        s = s.strip()
-        if s.startswith('"') and s.endswith('"'):
-            s = s[1:-1]
-        
-        # Replace CSV-escaped double quotes "" with a placeholder,
-        # then convert to proper single-quoted string
-        s = s.replace('""', "'")
-        parsed = ast.literal_eval(s)
-        
-        # Ensure every item is a dict, not a tuple
-        result = []
-        for item in parsed:
-            if isinstance(item, dict):
-                result.append({
-                    "cast_id":      item.get("cast_id"),
-                    "character":    item.get("character"),
-                    "credit_id":    item.get("credit_id"),
-                    "gender":       item.get("gender"),
-                    "id":           item.get("id"),
-                    "name":         item.get("name"),
-                    "order":        item.get("order"),
-                    "profile_path": item.get("profile_path"),
-                })
-        return result
-    except Exception:
-        return []
+    # Strip outer wrapping quote added by CSV reader
+    if s.startswith('"') and s.endswith('"'):
+        s = s[1:-1]
+    
+    #Try to handle bad json by trying to close it
+    open_braces = s.count('{') - s.count('}')
+    if open_braces > 0:
+        s += '}' * open_braces
+    # Replace CSV-escaped double-quotes ("") with a null-byte placeholder
+    # so they don't interfere with splitting or ast.literal_eval.
+    s = s.replace('""', '\x00')
+
+    # Extract individual {...} dict strings from the list
+    objects = re.findall(r'\{[^{}]*\}', s)
+
+    result = []
+    for obj_str in objects:
+        try:
+            # Restore placeholder as an escaped single quote so
+            # ast.literal_eval sees a valid string literal.
+
+            obj_str = obj_str.replace('\x00', "\\'")
+            parsed = ast.literal_eval(obj_str)
+            if isinstance(parsed, dict):
+                result.append({k: parsed.get(k) for k in field_keys})
+        except Exception as e:
+            # Skip this one bad object; keep everything else
+            #obj_str = obj_str.replace('\x00', "\\'")
+            #print(obj_str)
+            continue
+
+    return result
+
+
+def parse_cast(s: str):
+    return _parse_credits_list(s, CAST_KEYS)
+
+
+def parse_crew(s: str):
+    return _parse_credits_list(s, CREW_KEYS)
+
 
 cast_udf = udf(parse_cast, cast_schema)
 crew_udf = udf(parse_crew, crew_schema)
 
-df_credits_clean = df_credits \
-    .withColumn("cast", cast_udf(col("cast"))) \
+
+# ---------------------------------------------------------------------------
+# Build DataFrame
+# ---------------------------------------------------------------------------
+
+sc = spark.sparkContext
+
+raw_rdd = sc.textFile("bronze_data_sample/credits.csv")
+header  = raw_rdd.first()
+data_rdd = raw_rdd.filter(lambda line: line != header)
+
+parsed_rdd = (
+    data_rdd
+    .map(parse_line)
+    .filter(lambda x: x is not None)
+)
+
+df_credits = spark.createDataFrame(parsed_rdd, schema=flat_schema)
+
+df_credits_clean = (
+    df_credits
+    .withColumn("cast", cast_udf(col("cast")))
     .withColumn("crew", crew_udf(col("crew")))
+)
 
+# ---------------------------------------------------------------------------
+# Inspect results
+# ---------------------------------------------------------------------------
 
-df_credits_clean.show()
 df_credits_clean.printSchema()
+df_credits_clean.orderBy("id").show(truncate=80)
 
-print(df_credits_clean.count())
-print(data_rdd.count())
+print(f"Parsed rows : {df_credits_clean.count()}")
+print(f"Raw rows    : {data_rdd.count()}")
 
-df_credits_clean.orderBy(df_credits_clean["id"]).show()
+print(df_credits_clean.filter(size(col("cast")) == 0).count())
+print(df_credits_clean.select(col("id")).filter(size(col("cast")) == 0).collect())
+
+
+print(df_credits_clean.filter(size(col("crew")) == 0).count())
+print(df_credits_clean.select(col("id")).filter(size(col("crew")) == 0).collect())
+
+
+'''
+
+def fix_and_load_csv(filepath):
+    fixed_lines = []
+    with open(filepath, 'r') as f:
+        for line in f:
+            # This logic assumes your columns are strictly separated by a single " 
+            # and internal data uses ""
+            # We replace only the delimiters with a pipe '|'
+            fixed_line = line.replace('"', '|')
+            # If your data had "" to represent a single quote, 
+            # it is now ||, which we can change back to "
+            fixed_line = fixed_line.replace('||', '"')
+            fixed_lines.append(fixed_line)
+
+
+#standardizing data, such as multiple ids, and make sure to keep the columns that have the most data if possible try to merge the data a + b = c
+
+# ── 1. Merge all rows with the same id ───────────────────────────────────────
+df_merged = df_credits_clean \
+    .groupBy("id") \
+    .agg(
+        flatten(collect_list("cast")).alias("cast"),
+        flatten(collect_list("crew")).alias("crew")
+    )
+
+# ── 2. Deduplicate cast by credit_id ─────────────────────────────────────────
+df_cast_deduped = df_merged \
+    .select("id", explode_outer("cast").alias("cast_member")) \
+    .withColumn("credit_id", col("cast_member.credit_id")) \
+    .dropDuplicates(["id", "credit_id"]) \
+    .drop("credit_id") \
+    .groupBy("id") \
+    .agg(collect_list("cast_member").alias("cast"))
+
+# ── 3. Deduplicate crew by credit_id ─────────────────────────────────────────
+df_crew_deduped = df_merged \
+    .select("id", explode_outer("crew").alias("crew_member")) \
+    .withColumn("credit_id", col("crew_member.credit_id")) \
+    .dropDuplicates(["id", "credit_id"]) \
+    .drop("credit_id") \
+    .groupBy("id") \
+    .agg(collect_list("crew_member").alias("crew"))
+
+# ── 4. Join back together ─────────────────────────────────────────────────────
+df_final = df_cast_deduped.join(df_crew_deduped, on="id", how="inner")
+
+df_final.show()
+df_final.printSchema()
+print(df_final.count())
+'''
 '''
 for row in df_credits.collect():
     print("ID:", row["id"])

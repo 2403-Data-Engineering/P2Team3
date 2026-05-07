@@ -19,7 +19,6 @@ os.environ["PYSPARK_DRIVER_PYTHON"] = f'"{sys.executable}"'
 
 spark = SparkSession.builder.appName("CreditsParser").getOrCreate()
 
-
 # ---------------------------------------------------------------------------
 # Schemas
 # ---------------------------------------------------------------------------
@@ -144,8 +143,11 @@ crew_udf = udf(parse_crew, crew_schema)
 # ---------------------------------------------------------------------------
 
 sc = spark.sparkContext
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
-raw_rdd = sc.textFile("bronze_data_sample/credits.csv")
+bronze_path = os.path.join(script_dir, "..", "bronze", "bronze_data_sample", "credits.csv")
+
+raw_rdd = sc.textFile(bronze_path)
 header  = raw_rdd.first()
 data_rdd = raw_rdd.filter(lambda line: line != header)
 
@@ -173,31 +175,18 @@ df_credits_clean.orderBy("id").show(truncate=80)
 print(f"Parsed rows : {df_credits_clean.count()}")
 print(f"Raw rows    : {data_rdd.count()}")
 
+print("Cols with no cast:")
 print(df_credits_clean.filter(size(col("cast")) == 0).count())
 print(df_credits_clean.select(col("id")).filter(size(col("cast")) == 0).collect())
 
-
+print("Cols with no crew:")
 print(df_credits_clean.filter(size(col("crew")) == 0).count())
 print(df_credits_clean.select(col("id")).filter(size(col("crew")) == 0).collect())
 
 
 '''
 
-def fix_and_load_csv(filepath):
-    fixed_lines = []
-    with open(filepath, 'r') as f:
-        for line in f:
-            # This logic assumes your columns are strictly separated by a single " 
-            # and internal data uses ""
-            # We replace only the delimiters with a pipe '|'
-            fixed_line = line.replace('"', '|')
-            # If your data had "" to represent a single quote, 
-            # it is now ||, which we can change back to "
-            fixed_line = fixed_line.replace('||', '"')
-            fixed_lines.append(fixed_line)
 
-
-#standardizing data, such as multiple ids, and make sure to keep the columns that have the most data if possible try to merge the data a + b = c
 
 # ── 1. Merge all rows with the same id ───────────────────────────────────────
 df_merged = df_credits_clean \

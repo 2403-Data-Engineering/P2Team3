@@ -9,7 +9,7 @@ from pyspark.sql.types import (
     IntegerType, StringType, ArrayType,
     StructField, StructType
 )
-from pyspark.sql.functions import col, udf, size
+from pyspark.sql.functions import col, udf, size, explode, explode_outer, first, last, collect_list, struct, count, sum
 
 os.environ["HADOOP_HOME"] = r"D:\hadoop-3.5.5-bin"
 os.environ["PATH"] = os.environ["HADOOP_HOME"] + r"\bin;" + os.environ["PATH"]
@@ -172,59 +172,139 @@ df_credits_clean = (
 df_credits_clean.printSchema()
 df_credits_clean.orderBy("id").show(truncate=80)
 
+print("col with multiple ids:")
+print(df_credits_clean.groupBy("id").agg(count("id").alias("count")).orderBy(col("count"), ascending=False).filter(col("count") > 1).agg(sum(col("count")).alias("total_repeated_ids")).collect())
+
+
 print(f"Parsed rows : {df_credits_clean.count()}")
 print(f"Raw rows    : {data_rdd.count()}")
 
 print("Cols with no cast:")
 print(df_credits_clean.filter(size(col("cast")) == 0).count())
-print(df_credits_clean.select(col("id")).filter(size(col("cast")) == 0).collect())
+#print(df_credits_clean.select(col("id")).filter(size(col("cast")) == 0).collect())
 
 print("Cols with no crew:")
 print(df_credits_clean.filter(size(col("crew")) == 0).count())
-print(df_credits_clean.select(col("id")).filter(size(col("crew")) == 0).collect())
+#print(df_credits_clean.select(col("id")).filter(size(col("crew")) == 0).collect())
 
 
-'''
+# ---------------------------------------------------------------------------
+# Merge smae movie id, while also getting longgest information - cast
+# ---------------------------------------------------------------------------
+
+@udf(StringType())
+def pick_longest_data(values:list):
+    candidates = [v for v in (values or []) if v is not None]
+    return max(candidates, key=len) if candidates else None
+
+
+#Expand columns, and group by id and credit_id, and find the first element in the group that is not null
+#or make a list out of it to be reduced into the longgest value
+df_cast_merge = df_credits_clean.select(col("id"), explode_outer(col("cast")).alias("c"))\
+        .groupBy(col("id"), col("c.credit_id"))\
+        .agg(
+                first("c.cast_id",      ignorenulls=True).alias("cast_id"),
+                collect_list("c.character").alias("all_characters"),
+                collect_list("c.name").alias("all_names"),
+                collect_list("c.profile_path").alias("all_profiles"),
+                first("c.gender",       ignorenulls=True).alias("gender"),
+                first("c.id",           ignorenulls=True).alias("person_id"),
+                first("c.order",        ignorenulls=True).alias("order"),
+        )
+
+#look for longgest: name, character, and profile_path
+
+df_cast_merge = df_cast_merge \
+    .withColumn("character",   pick_longest_data("all_characters")) \
+    .withColumn("name",        pick_longest_data("all_names")) \
+    .withColumn("profile_path",pick_longest_data("all_profiles")) \
+    .drop("all_characters", "all_names", "all_profiles")
+
+
+#add structure back to data
+df_cast_merge = df_cast_merge.select(
+    col("id"),
+    struct(
+        col("cast_id"),
+        col("character"),
+        col("name"),
+        col("profile_path"),
+        col("gender"),
+        col("person_id"),
+        col("order"),
+        col("credit_id")
+    ).alias("c")
+)
+
+
+#make same movie id collumns back to array
+df_cast_merge = df_cast_merge.groupBy("id").agg(
+    collect_list("c").alias("cast")
+)
 
 
 
-# ── 1. Merge all rows with the same id ───────────────────────────────────────
-df_merged = df_credits_clean \
-    .groupBy("id") \
-    .agg(
-        flatten(collect_list("cast")).alias("cast"),
-        flatten(collect_list("crew")).alias("crew")
-    )
 
-# ── 2. Deduplicate cast by credit_id ─────────────────────────────────────────
-df_cast_deduped = df_merged \
-    .select("id", explode_outer("cast").alias("cast_member")) \
-    .withColumn("credit_id", col("cast_member.credit_id")) \
-    .dropDuplicates(["id", "credit_id"]) \
-    .drop("credit_id") \
-    .groupBy("id") \
-    .agg(collect_list("cast_member").alias("cast"))
+#df_cast_merge.show()
+#df_cast_merge.printSchema()
 
-# ── 3. Deduplicate crew by credit_id ─────────────────────────────────────────
-df_crew_deduped = df_merged \
-    .select("id", explode_outer("crew").alias("crew_member")) \
-    .withColumn("credit_id", col("crew_member.credit_id")) \
-    .dropDuplicates(["id", "credit_id"]) \
-    .drop("credit_id") \
-    .groupBy("id") \
-    .agg(collect_list("crew_member").alias("crew"))
 
-# ── 4. Join back together ─────────────────────────────────────────────────────
-df_final = df_cast_deduped.join(df_crew_deduped, on="id", how="inner")
 
-df_final.show()
-df_final.printSchema()
+# ---------------------------------------------------------------------------
+# Merge smae movie id, while also getting longgest information - crew
+# ---------------------------------------------------------------------------
+
+
+#Expand columns, and group by id and credit_id, and find the first element in the group that is not null
+#or make a list out of it to be reduced into the longgest value
+df_crew_merge = df_credits_clean.select(col("id"), explode_outer(col("crew")).alias("c"))\
+        .groupBy(col("id"), col("c.credit_id"))\
+        .agg(
+                collect_list("c.department").alias("all_departments"),
+                collect_list("c.name").alias("all_names"),
+                collect_list("c.profile_path").alias("all_profiles"),
+                collect_list("c.job").alias("all_jobs"),
+                first("c.gender",       ignorenulls=True).alias("gender"),
+                first("c.id",           ignorenulls=True).alias("person_id"),
+        )
+
+#look for longgest: name, character, and profile_path
+
+df_crew_merge = df_crew_merge \
+    .withColumn("department",   pick_longest_data("all_departments")) \
+    .withColumn("name",         pick_longest_data("all_names")) \
+    .withColumn("profile_path", pick_longest_data("all_profiles"))\
+    .withColumn("job",          pick_longest_data("all_jobs")) \
+    .drop("all_characters", "all_names", "all_profiles", "all_jobs", "all_departments")
+
+
+#add structure back to data
+df_crew_merge = df_crew_merge.select(
+    col("id"),
+    struct(
+        col("department"),
+        col("job"),
+        col("name"),
+        col("profile_path"),
+        col("gender"),
+        col("person_id"),
+        col("credit_id")
+    ).alias("c")
+)
+
+
+#make same movie id collumns back to array
+df_crew_merge = df_crew_merge.groupBy("id").agg(
+    collect_list("c").alias("crew")
+)
+
+#df_crew_merge.show()
+#df_crew_merge.printSchema()
+
+
+df_final = df_crew_merge.join(df_cast_merge, on="id")
+#df_final.show()
+#df_final.printSchema()
+print("number of columns")
 print(df_final.count())
-'''
-'''
-for row in df_credits.collect():
-    print("ID:", row["id"])
-    print("CAST:", row["cast"])
-    print("CREW:", row["crew"])
-    print("-" * 80)
-'''
+df_final.write.parquet("ingest/silver/credits", mode="overwrite")

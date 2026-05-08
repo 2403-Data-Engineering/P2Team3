@@ -4,6 +4,8 @@ import csv
 import io
 import ast
 import re
+import json_repair
+import ftfy
 from pyspark.sql import SparkSession
 from pyspark.sql.types import (
     IntegerType, StringType, ArrayType,
@@ -96,13 +98,6 @@ def _parse_credits_list(s: str, field_keys: list) -> list:
     if s.startswith('"') and s.endswith('"'):
         s = s[1:-1]
     
-    #Try to handle bad json by trying to close it
-    open_braces = s.count('{') - s.count('}')
-    if open_braces > 0:
-        s += '}' * open_braces
-    # Replace CSV-escaped double-quotes ("") with a null-byte placeholder
-    # so they don't interfere with splitting or ast.literal_eval.
-    s = s.replace('""', '\x00')
 
     # Extract individual {...} dict strings from the list
     objects = re.findall(r'\{[^{}]*\}', s)
@@ -112,9 +107,8 @@ def _parse_credits_list(s: str, field_keys: list) -> list:
         try:
             # Restore placeholder as an escaped single quote so
             # ast.literal_eval sees a valid string literal.
-
-            obj_str = obj_str.replace('\x00', "\\'")
-            parsed = ast.literal_eval(obj_str)
+            fixed = ftfy.fix_text(obj_str)
+            parsed = json_repair.loads(fixed)
             if isinstance(parsed, dict):
                 result.append({k: parsed.get(k) for k in field_keys})
         except Exception as e:
@@ -303,8 +297,10 @@ df_crew_merge = df_crew_merge.groupBy("id").agg(
 
 
 df_final = df_crew_merge.join(df_cast_merge, on="id")
-#df_final.show()
-#df_final.printSchema()
+df_final.show()
+df_final.printSchema()
 print("number of columns")
 print(df_final.count())
+
 df_final.write.parquet("ingest/silver/credits", mode="overwrite")
+#df_final.write.json("ingest/silver/credits_json", mode="overwrite")

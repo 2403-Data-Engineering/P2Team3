@@ -48,7 +48,7 @@ flat_schema = StructType([
     StructField("id",   IntegerType(), nullable=False),
 ])
 
-df_credits = spark.read.csv(path="bronze_data_sample/credits.csv", header=True, schema=flat_schema)
+df_credits = spark.read.csv(path="", header=True, schema=flat_schema)
 df_credits.show()
 df_credits.printSchema()
 

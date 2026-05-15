@@ -179,11 +179,15 @@ print(df_credits_clean.filter(size(col("cast")) == 0).count())
 
 print("Cols with no crew:")
 print(df_credits_clean.filter(size(col("crew")) == 0).count())
+
+print("Cols with no crew and no cast, that will be removed")
+print(df_credits_clean.filter((size(col("crew")) == 0) & (size(col("cast")) == 0)).count())
+df_credits_clean = df_credits_clean.filter((size(col("crew")) != 0) | (size(col("cast")) != 0))
 #print(df_credits_clean.select(col("id")).filter(size(col("crew")) == 0).collect())
 
 
 # ---------------------------------------------------------------------------
-# Merge smae movie id, while also getting longgest information - cast
+# Merge same movie id, while also getting longgest information - cast
 # ---------------------------------------------------------------------------
 
 @udf(StringType())
@@ -245,7 +249,7 @@ df_cast_merge = df_cast_merge.groupBy("id").agg(
 
 
 # ---------------------------------------------------------------------------
-# Merge smae movie id, while also getting longgest information - crew
+# Merge same movie id, while also getting longgest information - crew
 # ---------------------------------------------------------------------------
 
 
@@ -296,10 +300,10 @@ df_crew_merge = df_crew_merge.groupBy("id").agg(
 #df_crew_merge.printSchema()
 
 
-df_final = df_crew_merge.join(df_cast_merge, on="id")
+df_final = df_crew_merge.join(df_cast_merge, on="id", how="outer")
 df_final.show()
 df_final.printSchema()
-print("number of columns")
+print("number of rows")
 print(df_final.count())
 
 df_final.write.parquet("ingest/silver/credits", mode="overwrite")

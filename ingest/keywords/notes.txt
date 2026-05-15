@@ -1,0 +1,23 @@
+Putting notes here for myself and the group in regards to my thought process or issues that may affect me
+
+1) Some rows in the keywords.csv file have the data of one of the json objects surrounded in two double quotes
+(""Like this"") instead of regular double quotes or single quotes ('like this' or "like this")
+From what I can tell, this causes a structural issue with reading the csv file into spark and rows with this issue
+get cut off and have the data itself start with a doublequote instead of opening bracket [ like it should be.
+
+Will likely have to consider duplicating the keywords csv file and use regex to modify it to remove this issue.
+
+
+Update as of 5-7-26:
+I added a function that goes through the csv file and replaces all instances of "" with ', so it matches the standard format
+I was originally just going to drop those rows, but the rest of the data for these lines was perfectly intact,
+so I decided to just fix this manually. Additionally, this will still work on the large dataset assuming it runs in memory
+You just need to change the values for keywords file path and output file path in .env file
+
+Modified existing rows that start with {} instead of a list, changed them to now be in format, since their data is otherwise good
+
+Dropped rows that simply had [] as their keyword list with no quotation marks (Treated as null)
+
+Had to add filter that removes /xa0 character from csv text since the parser doesn't like it.
+
+Use distinct() to remove duplicate rows

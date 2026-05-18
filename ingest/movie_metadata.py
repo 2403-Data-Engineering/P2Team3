@@ -221,12 +221,14 @@ df_meta.printSchema()
 
 """
 
-- belongs_to_collection: json object -> collection name string
-- genres: json object array -> string list with genre names
-- overview: check for mojibake and keep as string
-- production_companies: json array -> list of company names
-- release_date: get all entries into XXXX-XX-XX format (from XXXX.XX.XX) and set invalid dates to None
-- spoken_languages: change from json array -> list of iso_639_1 values
+Gui
+
+
+Seth
+
+
+
+
 - tagline: keep as string
 
 - id: drop nulls
@@ -234,4 +236,38 @@ df_meta.printSchema()
 
 DONE
 - adult
+- belongs_to_collection: json object -> collection name string
+- production_companies: json array -> list of company names
+- spoken_languages: change from json array -> list of iso_639_1 values
+- genres: json object array -> string list with genre names
+- release_date: get all entries into XXXX-XX-XX format (from XXXX.XX.XX) and set invalid dates to None
+- overview: check for mojibake and keep as string
 """
+@udf(returnType=StringType())
+def parse_collection(c: str):
+    try:
+        t = ast.literal_eval(c)
+        return t['name']
+    except Exception:
+        return None
+
+@udf(returnType=ArrayType(StringType()))    
+def parse_companies(companies: str):
+    try:
+        return [item['name'] for item in ast.literal_eval(companies)]
+    except Exception:
+        return None
+@udf(returnType=ArrayType(StringType()))    
+def parse_lang(langs: str):
+    try:
+        return [item['iso_639_1'] for item in ast.literal_eval(langs)]
+    except Exception:
+        return None
+    
+parsed_df = df_meta \
+    .withColumn("belongs_to_collection",parse_collection(col('belongs_to_collection'))) \
+    .withColumn("production_companies", parse_companies(col("production_companies"))) \
+    .withColumn("spoken_languages", parse_lang(col("spoken_languages")))
+
+parsed_df.show()
+parsed_df.printSchema()

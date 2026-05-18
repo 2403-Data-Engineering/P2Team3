@@ -137,7 +137,7 @@ def parse_line(line: str):
             return None
         
         # check if boolean fields have boolean values
-        elif row[0] not in ['False','True'] or row[21] not in ['False','True']:
+        elif row[0] not in ['False','True']:
             return None
             
         else:
@@ -218,3 +218,20 @@ df_meta = spark.createDataFrame(parsed_rdd, meta_schema)
 
 df_meta.show()
 df_meta.printSchema()
+
+"""
+
+- belongs_to_collection: json object -> collection name string
+- genres: json object array -> string list with genre names
+- overview: check for mojibake and keep as string
+- production_companies: json array -> list of company names
+- release_date: get all entries into XXXX-XX-XX format (from XXXX.XX.XX) and set invalid dates to None
+- spoken_languages: change from json array -> list of iso_639_1 values
+- tagline: keep as string
+
+- id: drop nulls
+- title: drop nulls, keep as string
+
+DONE
+- adult
+"""

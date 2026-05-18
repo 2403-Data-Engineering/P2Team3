@@ -42,30 +42,46 @@ language_schema = ArrayType(StructType[
 
 
 meta_schema = ArrayType(StructType[
+    
     StructField("adult", BooleanType(), nullable=True), #0
-    StructField("belongs_to_collection", ArrayType(belong_schema), nullable=True),
-    StructField("budget", IntegerType(), nullable=True), #2
+    
+    StructField("belongs_to_collection", StringType(), nullable=True),
+    
+    StructField("budget", IntegerType(), nullable=True), #2 ***************
+
     StructField("genres", ArrayType(genre_schema), nullable=True),
-    StructField("homepage", StringType(), nullable=True),#4
+    
+    # StructField("homepage", StringType(), nullable=True),#4 *******
+    
     StructField("id", IntegerType(), nullable=False),
-    StructField("imdb_id", StringType(), nullable=True),#6
-    StructField("original_language", ArrayType(language_schema), nullable=True),
-    StructField("original_title", StringType(),nullable=True), #8
+    
+    # StructField("imdb_id", StringType(), nullable=True),#6 ******
+    # StructField("original_language", StringType(), nullable=True), # *****
+    # StructField("original_title", StringType(),nullable=True), #8 **********
+
     StructField("overview", StringType(), nullable=True),
-    StructField("popularity", DoubleType(),nullable=True),#10
-    StructField("poster_path", StringType(), nullable=True),
-    StructField("production_companies", ArrayType(production_company_schema), nullable =True),
-    StructField("production_countries", ArrayType(production_country_schema), nullable=True),
+    
+    # StructField("popularity", DoubleType(),nullable=True),#10 *******
+    # StructField("poster_path", StringType(), nullable=True), #*******
+    StructField("production_companies", StringType(), nullable =True), 
+    # StructField("production_countries", StringType(), nullable=True), # **********
+    
     StructField("release_date", DateType(), nullable=True),#14
-    StructField("revenue", DoubleType(), nullable=True),
-    StructField("runtime", DoubleType(),nullable=True),#16
-    StructField("spoken_languages", ArrayType(language_schema), nullable=True),
-    StructField("status", StringType(), nullable=True),#18
+    
+    # StructField("revenue", DoubleType(), nullable=True), #***********
+    # StructField("runtime", DoubleType(),nullable=True),#16 ******
+    
+    StructField("spoken_languages", StringType(), nullable=True),
+    
+    # StructField("status", StringType(), nullable=True),#18 *******
+    
     StructField("tagline", StringType(), nullable=True),
+    
     StructField("title", StringType(), nullable=True),#20
-    StructField("video", BooleanType(), nullable=True),
-    StructField("vote_average", DoubleType(), nullable=True),#22
-    StructField("vote_count", DoubleType(), nullable=True)
+    
+    # StructField("video", BooleanType(), nullable=True), #*********
+    # StructField("vote_average", DoubleType(), nullable=True),#22 ********
+    # StructField("vote_count", DoubleType(), nullable=True) #*********
 ])
 """"
 TO DO:
@@ -136,46 +152,46 @@ def parse_line(line: str):
                     # genres
                     row[3],
                     # homepage
-                    row[4],
+                    #row[4],
                     # id (Primary Key)
                     int(row[5].strip()),
                     # imbd id
-                    row[6],
+                    #row[6],
                     # original language
-                    row[7],
+                    #row[7],
                     # original title
-                    row[8],
+                    #row[8],
                     # overview
                     row[9],
                     # popularity
-                    float(row[10]),
+                    #float(row[10]),
                     # poster_path
-                    row[11],
+                    #row[11],
                     # production companies
                     row[12],
                     # production countries
-                    row[13],
+                    #row[13],
                     # release date
                     # TO DO: Fix date formatting ###
                     row[14],
                     # revenue
-                    money_formatting(row[15]),
+                    # money_formatting(row[15]),
                     # runtime
-                    float(row[16]),
+                    #float(row[16]),
                     # spoken languages
                     row[17],
                     # status
-                    row[18],
+                    #row[18],
                     # tagline
                     row[19],
                     # title
                     row[20],
                     # video
-                    row[21],
+                    #row[21],
                     # vote average
-                    float(row[22]),
+                    #float(row[22]),
                     # vote count
-                    float(row[23])
+                    #float(row[23])
                 )
     except Exception:
         return None

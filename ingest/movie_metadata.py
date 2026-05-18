@@ -307,12 +307,31 @@ def parse_date(s: str):
     return None
 
 
+@udf
+def parse_overview(s: str):
+    if not s:
+        return None
+
+    s = s.strip()
+
+
+    
+    try:
+        fixed = ftfy.fix_text(s)
+        return fixed
+    except Exception as e:
+        return None
+
 df_meta_clean = (
     df_meta
     .withColumn("genres", parse_genre(col("genres")))\
-    .withColumn("release_date", parse_date(col("release_date")))
-    .withColumn("release_date", to_date(col("release_date")))
+    .withColumn("release_date", parse_date(col("release_date")))\
+    .withColumn("release_date", to_date(col("release_date")))\
+    .withColumn("overview", parse_overview(col("overview")))
 )
 df_meta_clean.printSchema()
 df_meta_clean.show()
+
+#for r in df_meta_clean.select("overview", "overview").collect():
+#    print(r)
 

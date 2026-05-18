@@ -12,44 +12,44 @@ from pyspark.sql.functions import from_json, col, regexp_replace, udf
 
 spark = SparkSession.builder.appName("MovieMetadata").getOrCreate()
 
-belong_schema = ArrayType(StructType[
+belong_schema = ArrayType(StructType([
     StructField("id", IntegerType(), nullable=True),
     StructField("name", StringType(), nullable=True),
     StructField("poster_path", StringType(), nullable= True),
     StructField("backdrop_path", StringType(), nullable=True)
-])
+]))
 
-genre_schema = ArrayType(StructType[
+genre_schema = ArrayType(StructType([
     StructField("id", IntegerType(), nullable=True),
     StructField("name", StringType(), nullable=True)
-])
+]))
 
-production_company_schema = ArrayType(StructType[
+production_company_schema = ArrayType(StructType([
     StructField("name", StringType(), nullable=True),
     StructField("id", IntegerType(), nullable=True)
-])
+]))
 
-production_country_schema = ArrayType(StructType[
+production_country_schema = ArrayType(StructType([
     StructField("iso_3166_1", StringType(), nullable=True),
     StructField("name", StringType(), nullable=True)
-])
+]))
 
-language_schema = ArrayType(StructType[
+language_schema = ArrayType(StructType([
     StructField("iso_639_1", StringType(),nullable=True),
     StructField("name", StringType(), nullable=True)
-])
+]))
 
 
 
-meta_schema = ArrayType(StructType[
+meta_schema = StructType([
     
     StructField("adult", BooleanType(), nullable=True), #0
     
     StructField("belongs_to_collection", StringType(), nullable=True),
     
-    StructField("budget", IntegerType(), nullable=True), #2 ***************
+    #StructField("budget", DoubleType(), nullable=True), #2 ***************
 
-    StructField("genres", ArrayType(genre_schema), nullable=True),
+    StructField("genres", StringType(), nullable=True),
     
     # StructField("homepage", StringType(), nullable=True),#4 *******
     
@@ -66,7 +66,7 @@ meta_schema = ArrayType(StructType[
     StructField("production_companies", StringType(), nullable =True), 
     # StructField("production_countries", StringType(), nullable=True), # **********
     
-    StructField("release_date", DateType(), nullable=True),#14
+    StructField("release_date", StringType(), nullable=True),#14
     
     # StructField("revenue", DoubleType(), nullable=True), #***********
     # StructField("runtime", DoubleType(),nullable=True),#16 ******
@@ -148,7 +148,7 @@ def parse_line(line: str):
                     # collection
                     row[1], 
                     # budget
-                    money_formatting(row[2]),
+                    #money_formatting(row[2]),
                     # genres
                     row[3],
                     # homepage
@@ -208,3 +208,13 @@ raw = sc.textFile("bronze/bronze_data_sample/movies_metadata.csv")
 
 header = raw.first()
 data = raw.filter(lambda line: line != header)
+
+parsed_rdd = (
+    data.map(parse_line)
+    .filter(lambda x: x != None)
+    )
+
+df_meta = spark.createDataFrame(parsed_rdd, meta_schema)
+
+df_meta.show()
+df_meta.printSchema()

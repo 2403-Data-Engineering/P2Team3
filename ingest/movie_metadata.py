@@ -5,9 +5,10 @@ from pyspark.sql import SparkSession
 os.environ["PYSPARK_PYTHON"] = f'{sys.executable}'
 os.environ["PYSPARK_DRIVER_PYTHON"] = f'{sys.executable}'
 
+from datetime import datetime
 
 from pyspark.sql.types import IntegerType, StringType, ArrayType, StructField, StructType, MapType, BooleanType, DoubleType, DateType
-from pyspark.sql.functions import from_json, col, regexp_replace, udf
+from pyspark.sql.functions import from_json, col, regexp_replace, udf, to_date
 
 
 spark = SparkSession.builder.appName("MovieMetadata").getOrCreate()
@@ -235,3 +236,83 @@ df_meta.printSchema()
 DONE
 - adult
 """
+
+#genre
+#release_date
+
+@udf
+def parse_genre(s: str):
+    if not s:
+        return []
+
+    s = s.strip()
+
+    # Strip outer wrapping quote added by CSV reader
+    if s.startswith('"') and s.endswith('"'):
+        s = s[1:-1]
+    
+    # Extract individual {...} dict strings from the list
+    objects = re.findall(r'\{[^{}]*\}', s)
+
+    result = set()
+    for obj_str in objects:
+        try:
+            # Restore placeholder as an escaped single quote so
+            # ast.literal_eval sees a valid string literal.
+            fixed = ftfy.fix_text(obj_str)
+            parsed = json_repair.loads(fixed)
+            if isinstance(parsed, dict):
+                result.add( parsed.get("name"))
+        except Exception as e:
+            # Skip this one bad object; keep everything else
+            #obj_str = obj_str.replace('\x00', "\\'")
+            #print(obj_str)
+            continue
+
+    return result
+
+
+@udf
+def parse_date(s: str):
+    FORMATS = [
+    "%Y-%m-%d",      # 2011-04-25
+    "%m/%d/%Y",      # 04/25/1951
+    "%m-%d-%Y",      # 11-10-1985
+    "%B %d, %Y",     # July 01, 1962
+    "%b %d, %Y",     # Jul 01, 1962
+    "%d-%m-%Y",      # 25-04-2011
+    "%d/%m/%Y",      # 25/04/2011
+]
+    if not s or not isinstance(s, str):
+        return None
+
+    s = s.strip()
+    s= s.replace(".", "-")
+    s= s.replace("/", "-")
+    # strip time portion if present
+    if " " in s and not any(c.isalpha() for c in s):
+        s = s[:s.find(" ")]
+
+    for fmt in FORMATS:
+        try:
+            dt = datetime.strptime(s, fmt)
+            today = dt.now()
+            if today < dt:
+                continue
+
+            return dt.strftime("%Y-%m-%d")
+        except:
+            continue
+
+    return None
+
+
+df_meta_clean = (
+    df_meta
+    .withColumn("genres", parse_genre(col("genres")))\
+    .withColumn("release_date", parse_date(col("release_date")))
+    .withColumn("release_date", to_date(col("release_date")))
+)
+df_meta_clean.printSchema()
+df_meta_clean.show()
+

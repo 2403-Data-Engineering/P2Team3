@@ -6,54 +6,51 @@
         "workspaceDir": "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala",
         "sources": [
             "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\src\\test\\scala",
-            "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\src\\test\\scala-2.13",
+            "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\src\\test\\scala-2.12",
             "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\src\\test\\scala-2",
             "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\src\\test\\java",
-            "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\target\\scala-2.13\\src_managed\\test"
+            "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\target\\scala-2.12\\src_managed\\test"
         ],
         "dependencies": [
             "root"
         ],
         "classpath": [
-            "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\.bloop\\root\\scala-2.13\\classes",
-            "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.13.16\\scala-library-2.13.16.jar",
-            "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scalameta\\munit_2.13\\0.7.29\\munit_2.13-0.7.29.jar",
+            "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\.bloop\\root\\scala-2.12\\classes",
+            "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.12.18\\scala-library-2.12.18.jar",
+            "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scalameta\\munit_2.12\\0.7.29\\munit_2.12-0.7.29.jar",
             "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scalameta\\junit-interface\\0.7.29\\junit-interface-0.7.29.jar",
             "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\junit\\junit\\4.13.2\\junit-4.13.2.jar",
             "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-sbt\\test-interface\\1.0\\test-interface-1.0.jar",
             "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\hamcrest\\hamcrest-core\\1.3\\hamcrest-core-1.3.jar"
         ],
         "out": "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\.bloop\\root",
-        "classesDir": "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\.bloop\\root\\scala-2.13\\test-classes",
+        "classesDir": "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\.bloop\\root\\scala-2.12\\test-classes",
         "resources": [
             "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\src\\test\\resources",
-            "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\target\\scala-2.13\\resource_managed\\test"
+            "C:\\Users\\sbucu\\p2team3\\P2Team3\\enrichscala\\target\\scala-2.12\\resource_managed\\test"
         ],
         "scala": {
             "organization": "org.scala-lang",
             "name": "scala-compiler",
-            "version": "2.13.16",
+            "version": "2.12.18",
             "options": [
                 
             ],
             "jars": [
-                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.13.16\\scala-library-2.13.16.jar",
-                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-compiler\\2.13.16\\scala-compiler-2.13.16.jar",
-                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-reflect\\2.13.16\\scala-reflect-2.13.16.jar",
-                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\io\\github\\java-diff-utils\\java-diff-utils\\4.15\\java-diff-utils-4.15.jar",
-                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\jline\\jline\\3.27.1\\jline-3.27.1-jdk8.jar"
+                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.12.18\\scala-library-2.12.18.jar",
+                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-compiler\\2.12.18\\scala-compiler-2.12.18.jar",
+                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-reflect\\2.12.18\\scala-reflect-2.12.18.jar",
+                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\modules\\scala-xml_2.12\\2.1.0\\scala-xml_2.12-2.1.0.jar",
+                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\jline\\jline\\2.14.6\\jline-2.14.6.jar"
             ],
             "setup": {
                 "order": "mixed",
-                "addLibraryToBootClasspath": false,
+                "addLibraryToBootClasspath": true,
                 "addCompilerToClasspath": false,
                 "addExtraJarsToClasspath": false,
-                "manageBootClasspath": false,
-                "filterLibraryFromClasspath": false
-            },
-            "bridgeJars": [
-                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala2-sbt-bridge\\2.13.16\\scala2-sbt-bridge-2.13.16.jar"
-            ]
+                "manageBootClasspath": true,
+                "filterLibraryFromClasspath": true
+            }
         },
         "java": {
             "options": [
@@ -136,51 +133,51 @@
                 {
                     "organization": "org.scala-lang",
                     "name": "scala-library",
-                    "version": "2.13.16",
+                    "version": "2.12.18",
                     "configurations": "default",
                     "artifacts": [
                         {
                             "name": "scala-library",
-                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.13.16\\scala-library-2.13.16.jar"
+                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.12.18\\scala-library-2.12.18.jar"
                         },
                         {
                             "name": "scala-library",
                             "classifier": "sources",
-                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.13.16\\scala-library-2.13.16-sources.jar"
+                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.12.18\\scala-library-2.12.18-sources.jar"
                         }
                     ]
                 },
                 {
                     "organization": "org.scala-lang",
                     "name": "scala-library",
-                    "version": "2.13.16",
+                    "version": "2.12.18",
                     "configurations": "optional",
                     "artifacts": [
                         {
                             "name": "scala-library",
-                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.13.16\\scala-library-2.13.16.jar"
+                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.12.18\\scala-library-2.12.18.jar"
                         },
                         {
                             "name": "scala-library",
                             "classifier": "sources",
-                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.13.16\\scala-library-2.13.16-sources.jar"
+                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.12.18\\scala-library-2.12.18-sources.jar"
                         }
                     ]
                 },
                 {
                     "organization": "org.scalameta",
-                    "name": "munit_2.13",
+                    "name": "munit_2.12",
                     "version": "0.7.29",
                     "configurations": "default",
                     "artifacts": [
                         {
-                            "name": "munit_2.13",
-                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scalameta\\munit_2.13\\0.7.29\\munit_2.13-0.7.29.jar"
+                            "name": "munit_2.12",
+                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scalameta\\munit_2.12\\0.7.29\\munit_2.12-0.7.29.jar"
                         },
                         {
-                            "name": "munit_2.13",
+                            "name": "munit_2.12",
                             "classifier": "sources",
-                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scalameta\\munit_2.13\\0.7.29\\munit_2.13-0.7.29-sources.jar"
+                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scalameta\\munit_2.12\\0.7.29\\munit_2.12-0.7.29-sources.jar"
                         }
                     ]
                 },

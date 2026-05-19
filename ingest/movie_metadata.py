@@ -8,7 +8,7 @@ os.environ["PYSPARK_DRIVER_PYTHON"] = f'{sys.executable}'
 from datetime import datetime
 
 from pyspark.sql.types import IntegerType, StringType, ArrayType, StructField, StructType, MapType, BooleanType, DoubleType, DateType
-from pyspark.sql.functions import from_json, col, regexp_replace, udf, to_date
+from pyspark.sql.functions import from_json, col, regexp_replace, udf, to_date, explode_outer, first, collect_list
 
 
 spark = SparkSession.builder.appName("MovieMetadata").getOrCreate()
@@ -84,20 +84,6 @@ meta_schema = StructType([
     # StructField("vote_average", DoubleType(), nullable=True),#22 ********
     # StructField("vote_count", DoubleType(), nullable=True) #*********
 ])
-""""
-TO DO:
-    Corruption Handling:
-        - date formatting/impossible dates
-        - negative/impossible numeric values
-        - Stringified JSON corruption
-        - mojibake
-    Cleaning Data:
-        - null handling
-        - duplicate handling
-        - type validation
-
-
-"""
 
 
 def money_formatting(m: str):
@@ -294,7 +280,7 @@ DONE
 #genre
 #release_date
 
-@udf
+@udf(returnType=ArrayType(StringType()))
 def parse_genre(s: str):
     if not s:
         return []
@@ -323,7 +309,7 @@ def parse_genre(s: str):
             #print(obj_str)
             continue
 
-    return result
+    return list(result)
 
 
 @udf
@@ -407,6 +393,11 @@ def str_to_bool(s:str):
         return mapping[s]
     return None
 
+@udf
+def combine_lists(lists):
+    result = {x for sublist in lists for x in sublist}
+    return list(result)
+
 
 df_meta_clean = (
     df_meta
@@ -420,8 +411,27 @@ df_meta_clean = (
     .withColumn("tagline", parse_string(col("tagline")))\
 )
   
-df_meta_clean.printSchema()
-df_meta_clean.show()
+# df_meta_clean.printSchema()
+# df_meta_clean.show()
 
-print(df_meta_clean.filter( col("adult")==True).count())
+df_genre_merge = df_meta_clean.select("*")\
+        .groupBy(col("id"))\
+        .agg(
+            collect_list("genres").alias("genres"),
+            collect_list("spoken_languages").alias("spoken_languages"),
+            collect_list("production_companies").alias("production_companies"),
+            first("tagline", ignorenulls=True).alias("tagline"),
+            first("release_date", ignorenulls=True).alias("release_date"),
+            first("overview", ignorenulls=True).alias("overview"),
+            first("title", ignorenulls=True).alias("title"),
+            first("belongs_to_collection", ignorenulls=True).alias("belongs_to_collection"),
+            first("adult", ignorenulls=True).alias("adult")
+        )
+df_genre_merge = df_genre_merge.withColumn("genres", combine_lists(col("genres")))\
+        .withColumn("spoken_languages", combine_lists(col("spoken_languages")))\
+        .withColumn("production_companies", combine_lists(col("production_companies")))
+df_genre_merge = df_genre_merge.dropna(subset=["id","title"])
+df_genre_merge = df_genre_merge.filter(col("title") != "")
 
+df_genre_merge.write.json("ingest/silver/movie_metadata_json", mode="overwrite")
+df_genre_merge.write.parquet("ingest/silver/movie_metadata", mode="overwrite")

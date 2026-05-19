@@ -137,15 +137,66 @@ def parse_line(line: str):
         if len(row) < 24:
             return None
         
-        # check if boolean fields have boolean values
-        elif row[0] not in ['False','True']:
-            return None
-            
-        else:
+        if row[0].upper() == "TRUE":
             # still need to implement the rest of the type checking
             return (
                     # adult
-                    bool(row[0]),
+                    True,
+                    # collection
+                    row[1], 
+                    # budget
+                    #money_formatting(row[2]),
+                    # genres
+                    row[3],
+                    # homepage
+                    #row[4],
+                    # id (Primary Key)
+                    int(row[5].strip()),
+                    # imbd id
+                    #row[6],
+                    # original language
+                    #row[7],
+                    # original title
+                    #row[8],
+                    # overview
+                    row[9],
+                    # popularity
+                    #float(row[10]),
+                    # poster_path
+                    #row[11],
+                    # production companies
+                    row[12],
+                    # production countries
+                    #row[13],
+                    # release date
+                    # TO DO: Fix date formatting ###
+                    row[14],
+                    # revenue
+                    # money_formatting(row[15]),
+                    # runtime
+                    #float(row[16]),
+                    # spoken languages
+                    row[17],
+                    # status
+                    #row[18],
+                    # tagline
+                    row[19],
+                    # title
+                    row[20],
+                    # video
+                    #row[21],
+                    # vote average
+                    #float(row[22]),
+                    # vote count
+                    #float(row[23])
+                )
+        
+        else:
+
+            # still need to implement the rest of the type checking
+            return (
+                    # adult
+                    False,
                     # collection
                     row[1], 
                     # budget
@@ -311,13 +362,12 @@ def parse_date(s: str):
 
 
 @udf
-def parse_overview(s: str):
+def parse_string(s: str):
     if not s:
         return None
-
+    
     s = s.strip()
 
-    
     try:
         fixed = ftfy.fix_text(s)
         return fixed
@@ -347,17 +397,31 @@ def parse_lang(langs: str):
     except Exception:
         return None
 
+
+@udf(returnType=BooleanType())
+def str_to_bool(s:str):
+    s = s.strip()
+    s = s.upper()
+    mapping = {"TRUE": True, "FALSE": False}
+    if mapping.get(s) is not None:
+        return mapping[s]
+    return None
+
+
 df_meta_clean = (
     df_meta
     .withColumn("genres", parse_genre(col("genres")))\
     .withColumn("release_date", parse_date(col("release_date")))\
     .withColumn("release_date", to_date(col("release_date")))\
-    .withColumn("overview", parse_overview(col("overview")))\
+    .withColumn("overview", parse_string(col("overview")))\
     .withColumn("belongs_to_collection",parse_collection(col('belongs_to_collection'))) \
     .withColumn("production_companies", parse_companies(col("production_companies"))) \
-    .withColumn("spoken_languages", parse_lang(col("spoken_languages"))
+    .withColumn("spoken_languages", parse_lang(col("spoken_languages")))\
+    .withColumn("tagline", parse_string(col("tagline")))\
 )
   
 df_meta_clean.printSchema()
 df_meta_clean.show()
+
+print(df_meta_clean.filter( col("adult")==True).count())
 

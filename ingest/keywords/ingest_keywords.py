@@ -1,7 +1,4 @@
-import os
-import sys
-import re
-from dotenv import load_dotenv
+import os, sys, re
 from pyspark.sql import SparkSession
 from pyspark.sql.types import IntegerType, StringType, ArrayType, StructField, StructType
 from pyspark.sql.functions import from_json, col, regexp_replace, when, concat, lit
@@ -9,11 +6,10 @@ from pyspark.sql.functions import from_json, col, regexp_replace, when, concat, 
 os.environ["PYSPARK_PYTHON"] = f"{sys.executable}"
 os.environ["PYSPARK_DRIVER_PYTHON"] = f"{sys.executable}"
 
-load_dotenv()
-keyword_path= os.getenv("KEYWORD_PATH")
-output_path = os.getenv("KEY_TEMPCSV")
-silver_path = os.getenv("KEY_SILVER_DEST")
-
+keyword_path = "bronze/keywords.csv"
+output_path = "ingest/keywords/tempkeywords.csv"
+silver_path = "ingest/silver/keywords/"
+silver_json_path = "ingest/silver/keywords_json"
 
 
 def clean_csv(inputpath, outputpath):
@@ -25,12 +21,6 @@ def clean_csv(inputpath, outputpath):
     with open(outputpath, 'w', encoding='utf-8') as file:
         file.write(text)
 
-spark = (
-    SparkSession.builder
-    .appName("IngestKeywords")
-    .master('local[*]')
-    .getOrCreate()
-)
 
 singlekey_schema = StructType([
     StructField("id", IntegerType(), nullable=True),
@@ -45,6 +35,14 @@ flat_schema = StructType([
 ])
 
 clean_csv(keyword_path, output_path)
+
+
+spark = (
+    SparkSession.builder
+    .appName("IngestKeywords")
+    .master('local[*]')
+    .getOrCreate()
+)
 
 df = spark.read.csv(path=output_path, header=True, schema=flat_schema)
 df.orderBy('id').show()
@@ -75,6 +73,7 @@ df_new2 = (
 df_new2.show()
 df_new2.printSchema()
 
+df_new2.write.mode("overwrite").json(silver_json_path)
 df_new2.write.mode("overwrite").parquet(silver_path)
 
 spark.stop()

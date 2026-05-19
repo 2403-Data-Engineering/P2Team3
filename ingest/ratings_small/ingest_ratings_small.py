@@ -1,20 +1,16 @@
-import os
-import sys
-import re
-from dotenv import load_dotenv
+import os, sys
 from pyspark.sql import SparkSession
-from pyspark.sql.types import IntegerType, StringType, ArrayType, StructField, StructType, DoubleType, LongType
-# from pyspark.sql.functions import from_json, col, regexp_replace, when, concat, lit
-from pyspark.sql.functions import (col, from_unixtime, to_timestamp, row_number, round)
+from pyspark.sql.types import IntegerType, StructField, StructType, DoubleType, LongType
+from pyspark.sql.functions import col, from_unixtime, to_timestamp, row_number, round
 from pyspark.sql.window import Window
 
 os.environ["PYSPARK_PYTHON"] = f"{sys.executable}"
 os.environ["PYSPARK_DRIVER_PYTHON"] = f"{sys.executable}"
 
 
-load_dotenv()
-ratings_silver_path= os.getenv("RATINGS_SILVER_PATH")
-ratings_bronze_path= os.getenv("RATINGS_BRONZE_PATH")
+ratings_bronze_path = "bronze/ratings_small.csv"
+ratings_silver_path = "ingest/silver/ratings/"
+ratings_silver_json = "ingest/silver/ratings_json"
 
 
 spark = (
@@ -116,6 +112,8 @@ df.printSchema()
 # Write to parquet
 # -----------------------------
 df.write.mode("overwrite").parquet(ratings_silver_path)
+df.write.mode("overwrite").parquet(ratings_silver_json)
+
 
 print(f"Clean parquet written to: {ratings_silver_path}")
 

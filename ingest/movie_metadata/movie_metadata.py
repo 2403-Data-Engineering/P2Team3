@@ -1,6 +1,5 @@
 import os, sys, csv, io, ast, re, json_repair, ftfy
 
-from pyspark import SparkContext
 from pyspark.sql import SparkSession
 os.environ["PYSPARK_PYTHON"] = f'{sys.executable}'
 os.environ["PYSPARK_DRIVER_PYTHON"] = f'{sys.executable}'
@@ -8,7 +7,7 @@ os.environ["PYSPARK_DRIVER_PYTHON"] = f'{sys.executable}'
 from datetime import datetime
 
 from pyspark.sql.types import IntegerType, StringType, ArrayType, StructField, StructType, MapType, BooleanType, DoubleType, DateType
-from pyspark.sql.functions import from_json, col, regexp_replace, udf, to_date, explode_outer, first, collect_list
+from pyspark.sql.functions import col, udf, to_date, first, collect_list
 
 
 spark = SparkSession.builder.appName("MovieMetadata").getOrCreate()
@@ -242,7 +241,7 @@ def parse_line(line: str):
 
 sc = spark.sparkContext
 
-raw = sc.textFile("bronze/bronze_data_sample/movies_metadata.csv")
+raw = sc.textFile("bronze/movies_metadata.csv")
 
 header = raw.first()
 data = raw.filter(lambda line: line != header)
@@ -434,4 +433,4 @@ df_genre_merge = df_genre_merge.dropna(subset=["id","title"])
 df_genre_merge = df_genre_merge.filter(col("title") != "")
 
 df_genre_merge.write.json("ingest/silver/movie_metadata_json", mode="overwrite")
-df_genre_merge.write.parquet("ingest/silver/movie_metadata", mode="overwrite")
+df_genre_merge.write.parquet("ingest/silver/movie_metadata/", mode="overwrite")

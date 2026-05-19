@@ -1,17 +1,11 @@
-import os
-import sys
-import csv
-import io
-import ast
-import re
-import json_repair
-import ftfy
+import os, sys, csv, io, re
+import json_repair, ftfy
 from pyspark.sql import SparkSession
 from pyspark.sql.types import (
     IntegerType, StringType, ArrayType,
     StructField, StructType
 )
-from pyspark.sql.functions import col, udf, size, explode, explode_outer, first, last, collect_list, struct, count, sum
+from pyspark.sql.functions import col, udf, size, explode_outer, first, collect_list, struct, count, sum
 
 os.environ["HADOOP_HOME"] = r"D:\hadoop-3.5.5-bin"
 os.environ["PATH"] = os.environ["HADOOP_HOME"] + r"\bin;" + os.environ["PATH"]
@@ -139,7 +133,8 @@ crew_udf = udf(parse_crew, crew_schema)
 sc = spark.sparkContext
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-bronze_path = os.path.join(script_dir, "..", "bronze", "bronze_data_sample", "credits.csv")
+#bronze_path = os.path.join(script_dir, "..", "bronze", "bronze_data_sample", "credits.csv")
+bronze_path = "bronze/credits.csv"
 
 raw_rdd = sc.textFile(bronze_path)
 header  = raw_rdd.first()
@@ -306,5 +301,7 @@ df_final.printSchema()
 print("number of rows")
 print(df_final.count())
 
-df_final.write.parquet("ingest/silver/credits", mode="overwrite")
+df_final.write.parquet("ingest/silver/credits/", mode="overwrite")
+df_final.write.json("ingest/silver/credits_json/", mode="overwrite")
+
 #df_final.write.json("ingest/silver/credits_json", mode="overwrite")

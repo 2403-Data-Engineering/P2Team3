@@ -1,6 +1,4 @@
-import os
-import sys
-from dotenv import load_dotenv
+import os, sys
 from pyspark.sql import SparkSession
 from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 from pyspark.sql.functions import concat, lit, col
@@ -8,9 +6,9 @@ from pyspark.sql.functions import concat, lit, col
 os.environ["PYSPARK_PYTHON"] = f"{sys.executable}"
 os.environ["PYSPARK_DRIVER_PYTHON"] = f"{sys.executable}"
 
-load_dotenv()
-links_path = os.getenv("LINKS_PATH")
-silver_path = os.getenv("LINKS_SILVER_DEST")
+links_path = "bronze/links.csv"
+silver_path = "ingest/silver/links/"
+silver_json_path = "ingest/silver/links_json/"
 
 links_schema = StructType([
     StructField("movieId", IntegerType(), nullable=True),
@@ -33,5 +31,7 @@ df_new.show()
 df_new.printSchema()
 
 df_new.write.mode("overwrite").parquet(silver_path)
+df_new.write.mode("overwrite").json(silver_json_path)
+
 
 spark.stop()

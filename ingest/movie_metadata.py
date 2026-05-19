@@ -222,12 +222,14 @@ df_meta.printSchema()
 
 """
 
-- belongs_to_collection: json object -> collection name string
-- genres: json object array -> string list with genre names
-- overview: check for mojibake and keep as string
-- production_companies: json array -> list of company names
-- release_date: get all entries into XXXX-XX-XX format (from XXXX.XX.XX) and set invalid dates to None
-- spoken_languages: change from json array -> list of iso_639_1 values
+Gui
+
+
+Seth
+
+
+
+
 - tagline: keep as string
 
 - id: drop nulls
@@ -235,6 +237,7 @@ df_meta.printSchema()
 
 DONE
 - adult
+
 """
 
 #genre
@@ -314,7 +317,6 @@ def parse_overview(s: str):
 
     s = s.strip()
 
-
     
     try:
         fixed = ftfy.fix_text(s)
@@ -322,16 +324,40 @@ def parse_overview(s: str):
     except Exception as e:
         return None
 
+      
+      
+@udf(returnType=StringType())
+def parse_collection(c: str):
+    try:
+        t = ast.literal_eval(c)
+        return t['name']
+    except Exception:
+        return None
+
+@udf(returnType=ArrayType(StringType()))    
+def parse_companies(companies: str):
+    try:
+        return [item['name'] for item in ast.literal_eval(companies)]
+    except Exception:
+        return None
+@udf(returnType=ArrayType(StringType()))    
+def parse_lang(langs: str):
+    try:
+        return [item['iso_639_1'] for item in ast.literal_eval(langs)]
+    except Exception:
+        return None
+
 df_meta_clean = (
     df_meta
     .withColumn("genres", parse_genre(col("genres")))\
     .withColumn("release_date", parse_date(col("release_date")))\
     .withColumn("release_date", to_date(col("release_date")))\
-    .withColumn("overview", parse_overview(col("overview")))
+    .withColumn("overview", parse_overview(col("overview")))\
+    .withColumn("belongs_to_collection",parse_collection(col('belongs_to_collection'))) \
+    .withColumn("production_companies", parse_companies(col("production_companies"))) \
+    .withColumn("spoken_languages", parse_lang(col("spoken_languages"))
 )
+  
 df_meta_clean.printSchema()
 df_meta_clean.show()
-
-#for r in df_meta_clean.select("overview", "overview").collect():
-#    print(r)
 

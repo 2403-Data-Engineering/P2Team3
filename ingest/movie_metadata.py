@@ -5,9 +5,10 @@ from pyspark.sql import SparkSession
 os.environ["PYSPARK_PYTHON"] = f'{sys.executable}'
 os.environ["PYSPARK_DRIVER_PYTHON"] = f'{sys.executable}'
 
+from datetime import datetime
 
 from pyspark.sql.types import IntegerType, StringType, ArrayType, StructField, StructType, MapType, BooleanType, DoubleType, DateType
-from pyspark.sql.functions import from_json, col, regexp_replace, udf
+from pyspark.sql.functions import from_json, col, regexp_replace, udf, to_date
 
 
 spark = SparkSession.builder.appName("MovieMetadata").getOrCreate()
@@ -236,13 +237,95 @@ Seth
 
 DONE
 - adult
-- belongs_to_collection: json object -> collection name string
-- production_companies: json array -> list of company names
-- spoken_languages: change from json array -> list of iso_639_1 values
-- genres: json object array -> string list with genre names
-- release_date: get all entries into XXXX-XX-XX format (from XXXX.XX.XX) and set invalid dates to None
-- overview: check for mojibake and keep as string
+
 """
+
+#genre
+#release_date
+
+@udf
+def parse_genre(s: str):
+    if not s:
+        return []
+
+    s = s.strip()
+
+    # Strip outer wrapping quote added by CSV reader
+    if s.startswith('"') and s.endswith('"'):
+        s = s[1:-1]
+    
+    # Extract individual {...} dict strings from the list
+    objects = re.findall(r'\{[^{}]*\}', s)
+
+    result = set()
+    for obj_str in objects:
+        try:
+            # Restore placeholder as an escaped single quote so
+            # ast.literal_eval sees a valid string literal.
+            fixed = ftfy.fix_text(obj_str)
+            parsed = json_repair.loads(fixed)
+            if isinstance(parsed, dict):
+                result.add( parsed.get("name"))
+        except Exception as e:
+            # Skip this one bad object; keep everything else
+            #obj_str = obj_str.replace('\x00', "\\'")
+            #print(obj_str)
+            continue
+
+    return result
+
+
+@udf
+def parse_date(s: str):
+    FORMATS = [
+    "%Y-%m-%d",      # 2011-04-25
+    "%m/%d/%Y",      # 04/25/1951
+    "%m-%d-%Y",      # 11-10-1985
+    "%B %d, %Y",     # July 01, 1962
+    "%b %d, %Y",     # Jul 01, 1962
+    "%d-%m-%Y",      # 25-04-2011
+    "%d/%m/%Y",      # 25/04/2011
+]
+    if not s or not isinstance(s, str):
+        return None
+
+    s = s.strip()
+    s= s.replace(".", "-")
+    s= s.replace("/", "-")
+    # strip time portion if present
+    if " " in s and not any(c.isalpha() for c in s):
+        s = s[:s.find(" ")]
+
+    for fmt in FORMATS:
+        try:
+            dt = datetime.strptime(s, fmt)
+            today = dt.now()
+            if today < dt:
+                continue
+
+            return dt.strftime("%Y-%m-%d")
+        except:
+            continue
+
+    return None
+
+
+@udf
+def parse_overview(s: str):
+    if not s:
+        return None
+
+    s = s.strip()
+
+    
+    try:
+        fixed = ftfy.fix_text(s)
+        return fixed
+    except Exception as e:
+        return None
+
+      
+      
 @udf(returnType=StringType())
 def parse_collection(c: str):
     try:
@@ -263,11 +346,18 @@ def parse_lang(langs: str):
         return [item['iso_639_1'] for item in ast.literal_eval(langs)]
     except Exception:
         return None
-    
-parsed_df = df_meta \
+
+df_meta_clean = (
+    df_meta
+    .withColumn("genres", parse_genre(col("genres")))\
+    .withColumn("release_date", parse_date(col("release_date")))\
+    .withColumn("release_date", to_date(col("release_date")))\
+    .withColumn("overview", parse_overview(col("overview")))\
     .withColumn("belongs_to_collection",parse_collection(col('belongs_to_collection'))) \
     .withColumn("production_companies", parse_companies(col("production_companies"))) \
-    .withColumn("spoken_languages", parse_lang(col("spoken_languages")))
+    .withColumn("spoken_languages", parse_lang(col("spoken_languages"))
+)
+  
+df_meta_clean.printSchema()
+df_meta_clean.show()
 
-parsed_df.show()
-parsed_df.printSchema()

@@ -18,6 +18,7 @@
             "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.12.18\\scala-library-2.12.18.jar",
             "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\apache\\spark\\spark-core_2.12\\3.5.0\\spark-core_2.12-3.5.0.jar",
             "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\apache\\spark\\spark-sql_2.12\\3.5.0\\spark-sql_2.12-3.5.0.jar",
+            "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\io\\github\\cdimascio\\dotenv-java\\3.0.0\\dotenv-java-3.0.0.jar",
             "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\apache\\avro\\avro\\1.11.2\\avro-1.11.2.jar",
             "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\apache\\avro\\avro-mapred\\1.11.2\\avro-mapred-1.11.2.jar",
             "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\com\\twitter\\chill_2.12\\0.10.0\\chill_2.12-0.10.0.jar",
@@ -287,6 +288,7 @@
                 "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\scala-lang\\scala-library\\2.12.18\\scala-library-2.12.18.jar",
                 "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\apache\\spark\\spark-core_2.12\\3.5.0\\spark-core_2.12-3.5.0.jar",
                 "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\apache\\spark\\spark-sql_2.12\\3.5.0\\spark-sql_2.12-3.5.0.jar",
+                "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\io\\github\\cdimascio\\dotenv-java\\3.0.0\\dotenv-java-3.0.0.jar",
                 "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\apache\\avro\\avro\\1.11.2\\avro-1.11.2.jar",
                 "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\apache\\avro\\avro-mapred\\1.11.2\\avro-mapred-1.11.2.jar",
                 "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\com\\twitter\\chill_2.12\\0.10.0\\chill_2.12-0.10.0.jar",
@@ -482,6 +484,23 @@
                             "name": "spark-sql_2.12",
                             "classifier": "sources",
                             "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\org\\apache\\spark\\spark-sql_2.12\\3.5.0\\spark-sql_2.12-3.5.0-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "io.github.cdimascio",
+                    "name": "dotenv-java",
+                    "version": "3.0.0",
+                    "configurations": "default",
+                    "artifacts": [
+                        {
+                            "name": "dotenv-java",
+                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\io\\github\\cdimascio\\dotenv-java\\3.0.0\\dotenv-java-3.0.0.jar"
+                        },
+                        {
+                            "name": "dotenv-java",
+                            "classifier": "sources",
+                            "path": "C:\\Users\\sbucu\\AppData\\Local\\Coursier\\Cache\\v1\\https\\repo1.maven.org\\maven2\\io\\github\\cdimascio\\dotenv-java\\3.0.0\\dotenv-java-3.0.0-sources.jar"
                         }
                     ]
                 },

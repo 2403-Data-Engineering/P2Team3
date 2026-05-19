@@ -50,9 +50,9 @@ object Lab4 {
     avgRatings.show()
 
     // 6. Write output (parquet)
-    avgRatings.write
-      .mode("overwrite")
-      .parquet("output/movie_ratings")
+    // avgRatings.write
+    //   .mode("overwrite")
+    //   .parquet("output/movie_ratings")
 
     // 7. Stop Spark
     spark.stop()

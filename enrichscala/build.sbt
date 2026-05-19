@@ -14,7 +14,8 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       munit % Test,
       "org.apache.spark" %% "spark-core" % sparkVersion,
-      "org.apache.spark" %% "spark-sql" % sparkVersion
+      "org.apache.spark" %% "spark-sql" % sparkVersion,
+      "io.github.cdimascio" % "dotenv-java" % "3.0.0"
     ),
 
     Compile / mainClass := Some("example.EnrichData"),

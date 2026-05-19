@@ -81,7 +81,7 @@ object EnrichData {
     // -----------------------------
     // Step 4: Write Gold output
     // -----------------------------
-    //goldDf.write.mode("overwrite").parquet("gold/movie_features")
+    //goldDf..write.mode("overwrite").parquet("../gold/")
 
     println("Gold layer completed successfully.")
   }

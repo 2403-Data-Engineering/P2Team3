@@ -1,4 +1,7 @@
 dotenv==0.9.9
+ftfy==6.3.1
+json_repair==0.59.5
 py4j==0.10.9.9
 pyspark==4.1.1
 python-dotenv==1.2.2
+wcwidth==0.7.0

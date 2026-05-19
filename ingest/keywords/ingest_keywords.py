@@ -11,8 +11,9 @@ os.environ["PYSPARK_DRIVER_PYTHON"] = f"{sys.executable}"
 
 load_dotenv()
 keyword_path= os.getenv("KEYWORD_PATH")
-output_path = os.getenv("TEMPCSV")
-silver_path = os.getenv("SILVER_DEST")
+output_path = os.getenv("KEY_TEMPCSV")
+silver_path = os.getenv("KEY_SILVER_DEST")
+
 
 
 def clean_csv(inputpath, outputpath):
@@ -40,7 +41,7 @@ keywords_schema = ArrayType(singlekey_schema)
 
 flat_schema = StructType([
     StructField("id", IntegerType(), nullable=True),
-    StructField("keywords", StringType(),  nullable=True),
+    StructField("keywords", StringType(),  nullable=True)
 ])
 
 clean_csv(keyword_path, output_path)

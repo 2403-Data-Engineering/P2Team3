@@ -1,38 +1,36 @@
+error id: file:///C:/Users/sbucu/p2team3/P2Team3/enrichscala/src/main/scala/example/Gold.scala:
+file:///C:/Users/sbucu/p2team3/P2Team3/enrichscala/src/main/scala/example/Gold.scala
+empty definition using pc, found symbol in pc: 
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -org/apache/spark/sql/functions/example/enrich.
+	 -example/enrich.
+	 -scala/Predef.example.enrich.
+offset: 158
+uri: file:///C:/Users/sbucu/p2team3/P2Team3/enrichscala/src/main/scala/example/Gold.scala
+text:
+```scala
 package example
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
-import enrich.RatingsAgg
-import enrich.MovieJoin
-import enrich.FeatureBuilder
+import exampleenrich.RatingsAgg
+import example.enrich@@.MovieJoin
+import example.enrich.FeatureBuilder
 
-
-object EnrichData {
-
-  def main(args: Array[String]): Unit = {
-
-      val spark = SparkSession.builder()
-      .appName("EnrichData")
-      .master("local[*]")
-      .getOrCreate()
-
-    // Run Gold pipeline
-    run(spark)
-
-    spark.stop()
-  }
+object Gold {
 
   def run(spark: SparkSession): Unit = {
 
     // -----------------------------
     // Load Silver layer datasets
     // -----------------------------
-    val movies = spark.read.parquet("../ingest/silver/movie_metadata/part-00000-e43200e8-8291-4410-ae99-adf6fba3cf89-c000.snappy.parquet")
-    val credits = spark.read.parquet("../ingest/silver/credits/part-00000-f020f0fd-444e-40ba-85c5-a4a199fffe29-c000.snappy.parquet")
-    val keywords = spark.read.parquet("../ingest/silver/keywords/part-00000-07d5eac0-f208-4d72-9506-737fdfb4febc-c000.snappy.parquet")
-    val ratings = spark.read.parquet("../ingest/silver/ratings/part-00000-d7a35d00-d476-49a5-80cc-c3ea7a7aa59e-c000.snappy.parquet")
-    val links = spark.read.parquet("../ingest/silver/links/part-00000-893b4257-c682-446f-a38e-abd3c1c4c4aa-c000.snappy.parquet")
+    val movies = spark.read.parquet("data/silver/movies_clean")
+    val credits = spark.read.parquet("data/silver/credits_clean")
+    val keywords = spark.read.parquet("data/silver/keywords_clean")
+    val ratings = spark.read.parquet("data/silver/ratings_clean")
 
     // -----------------------------
     // Step 1: Aggregate ratings
@@ -63,8 +61,16 @@ object EnrichData {
     // -----------------------------
     // Step 4: Write Gold output
     // -----------------------------
-    goldDf.write.mode("overwrite").parquet("gold/movie_features")
+    goldDf.write
+      .mode("overwrite")
+      .parquet("data/gold/movie_features")
 
     println("Gold layer completed successfully.")
   }
 }
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: 

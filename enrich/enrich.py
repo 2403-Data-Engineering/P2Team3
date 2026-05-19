@@ -2,14 +2,16 @@ import os
 import sys
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import concat, lit, col
+from pyspark.sql import functions as F
 
 os.environ["PYSPARK_PYTHON"] = f"{sys.executable}"
 os.environ["PYSPARK_DRIVER_PYTHON"] = f"{sys.executable}"
 
 load_dotenv()
-links_path = os.getenv("LINKS_SILVER_DEST")
+#links_path = os.getenv("LINKS_SILVER_DEST")
 keywords_path = os.getenv("KEY_SILVER_DEST")
-credits_path = os.getenv("CREDITS_SILVER_DEST")
+#credits_path = os.getenv("CREDITS_SILVER_DEST")
 
 spark = (
     SparkSession.builder
@@ -18,15 +20,15 @@ spark = (
     .getOrCreate()
 )
 
-df_1 = spark.read.parquet(keywords_path)
-df_2 = spark.read.parquet(credits_path)
+df_key = spark.read.parquet(keywords_path)
+#df_2 = spark.read.parquet(credits_path)
 
-df_1.show()
-df_2.show()
+df = (df_key
+    .withColumn("keywords", F.transform("parsed", lambda x: x.getField("name")))
+    .drop("parsed")
+)
+df.show()
+df.printSchema()
 
-joined_df = df_1.join(df_2, on='id', how="outer")
-joined_df.show()
-joined_df.printSchema()
 
 spark.stop()
-

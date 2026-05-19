@@ -17,6 +17,7 @@ object EnrichData {
       .master("local[*]")
       .getOrCreate()
 
+      import spark.implicits._
     // Run Gold pipeline
     run(spark)
 
@@ -28,12 +29,17 @@ object EnrichData {
     // -----------------------------
     // Load Silver layer datasets
     // -----------------------------
-    val movies = spark.read.parquet("../ingest/silver/movie_metadata/part-00000-e43200e8-8291-4410-ae99-adf6fba3cf89-c000.snappy.parquet")
-    val credits = spark.read.parquet("../ingest/silver/credits/part-00000-f020f0fd-444e-40ba-85c5-a4a199fffe29-c000.snappy.parquet")
-    val keywords = spark.read.parquet("../ingest/silver/keywords/part-00000-07d5eac0-f208-4d72-9506-737fdfb4febc-c000.snappy.parquet")
-    val ratings = spark.read.parquet("../ingest/silver/ratings/part-00000-d7a35d00-d476-49a5-80cc-c3ea7a7aa59e-c000.snappy.parquet")
-    val links = spark.read.parquet("../ingest/silver/links/part-00000-893b4257-c682-446f-a38e-abd3c1c4c4aa-c000.snappy.parquet")
+    val movies = spark.read.parquet("../ingest/silver/movie_metadata/")
+    val credits = spark.read.parquet("../ingest/silver/credits/")
+    val keywords = spark.read.parquet("../ingest/silver/keywords/")
+    val ratings = spark.read.parquet("../ingest/silver/ratings/")
+    val links = spark.read.parquet("../ingest/silver/links/")
 
+    //movies.printSchema()
+    //credits.printSchema()
+    //keywords.printSchema()
+    //ratings.printSchema()
+    //links.printSchema()
     // -----------------------------
     // Step 1: Aggregate ratings
     // -----------------------------
@@ -46,13 +52,25 @@ object EnrichData {
       movies,
       credits,
       keywords,
-      ratingsAgg
+      links,
+      ratingsAgg,
+      spark
     )
+    joined.printSchema()
+    joined.show()
 
+    //working up to this point
+    /* 
+      create the embeding column and concat all the data
+      create the column with cast and crew with only relevant data
+      create a column with a keyword list.
+     */
+    
+    
     // -----------------------------
     // Step 3: Feature engineering
     // -----------------------------
-    val goldDf = FeatureBuilder.build(joined)
+    //val goldDf = FeatureBuilder.build(joined)
 
     // -----------------------------
     // Optional debug (uncomment if needed)
@@ -63,7 +81,7 @@ object EnrichData {
     // -----------------------------
     // Step 4: Write Gold output
     // -----------------------------
-    goldDf.write.mode("overwrite").parquet("gold/movie_features")
+    //goldDf.write.mode("overwrite").parquet("gold/movie_features")
 
     println("Gold layer completed successfully.")
   }

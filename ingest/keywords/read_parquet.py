@@ -18,7 +18,7 @@ spark = (
 
 df = spark.read.parquet(silver_path)
 df.cache()
-df.show(truncate=False)
+df.show()
 df.printSchema()
 
 spark.stop()

@@ -15,7 +15,6 @@ lazy val root = (project in file("."))
       munit % Test,
       "org.apache.spark" %% "spark-core" % sparkVersion,
       "org.apache.spark" %% "spark-sql" % sparkVersion,
-      "io.github.cdimascio" % "dotenv-java" % "3.0.0"
     ),
 
     Compile / mainClass := Some("example.EnrichData"),

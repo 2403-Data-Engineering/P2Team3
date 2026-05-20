@@ -2,13 +2,11 @@ import weaviate
 import weaviate.classes.config as wc
 from pyspark.sql import SparkSession
 
-#spark = SparkSession.builder.appName("movie-loader").getOrCreate()
 
-gold_path = "enrich/gold/"
-for file in gold_path.iterdir():
-    if file.is_file():
-        print(file.name)
-'''
+gold_path = "enrichscala/output/"
+
+spark = SparkSession.builder.appName("movie-loader").getOrCreate()
+
 client = weaviate.connect_to_local()
 print("Connected:", client.is_ready())
 
@@ -42,6 +40,8 @@ print("Movie collection created.")
 
 
 df = spark.read.parquet(gold_path)
+df.cache()
+df.show()
 print(f"Loaded {df.count()} rows from Parquet")
 
 movies = client.collections.get("Movie")
@@ -55,6 +55,7 @@ with movies.batch.dynamic() as batch:
     for row in df.collect():
         # Build combined_text from the descriptive fields — this is the only
         # property that gets vectorized.
+        '''
         combined_text = (
             f"{row.title}\n"
             f"Overview: {row.overview}\n"
@@ -66,7 +67,7 @@ with movies.batch.dynamic() as batch:
             f"Collection: {row.collection}"
             f"Genres: {', '.join(row.genres)}"
         )
-
+        '''
  
         # Add one object to the batch. We send raw properties only — Weaviate
         # calls the transformers container to generate the vector server-side.
@@ -86,7 +87,7 @@ with movies.batch.dynamic() as batch:
             "genres": row.genres,
             "spoken_languages": row.spoken_languages,
             "collection": row.collection,
-            "combined_text": combined_text
+            "combined_text": row.combined_text
         })
 # When the `with` block exits, any remaining buffered objects are flushed.
 
@@ -103,5 +104,5 @@ else:
 result = movies.aggregate.over_all(total_count=True)
 print(f"Total movies in collection: {result.total_count}")
 
-client.close()'''
-#spark.stop()
+client.close()
+spark.stop()

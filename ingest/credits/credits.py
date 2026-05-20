@@ -158,25 +158,25 @@ df_credits_clean = (
 # Inspect results
 # ---------------------------------------------------------------------------
 
-df_credits_clean.printSchema()
-df_credits_clean.orderBy("id").show(truncate=80)
+#df_credits_clean.printSchema()
+#df_credits_clean.orderBy("id").show(truncate=80)
 
-print("col with multiple ids:")
-print(df_credits_clean.groupBy("id").agg(count("id").alias("count")).orderBy(col("count"), ascending=False).filter(col("count") > 1).agg(sum(col("count")).alias("total_repeated_ids")).collect())
+#print("col with multiple ids:")
+#print(df_credits_clean.groupBy("id").agg(count("id").alias("count")).orderBy(col("count"), ascending=False).filter(col("count") > 1).agg(sum(col("count")).alias("total_repeated_ids")).collect())
 
 
-print(f"Parsed rows : {df_credits_clean.count()}")
-print(f"Raw rows    : {data_rdd.count()}")
+#print(f"Parsed rows : {df_credits_clean.count()}")
+#print(f"Raw rows    : {data_rdd.count()}")
 
-print("Cols with no cast:")
-print(df_credits_clean.filter(size(col("cast")) == 0).count())
+#print("Cols with no cast:")
+#print(df_credits_clean.filter(size(col("cast")) == 0).count())
 #print(df_credits_clean.select(col("id")).filter(size(col("cast")) == 0).collect())
 
-print("Cols with no crew:")
-print(df_credits_clean.filter(size(col("crew")) == 0).count())
+#print("Cols with no crew:")
+#print(df_credits_clean.filter(size(col("crew")) == 0).count())
 
-print("Cols with no crew and no cast, that will be removed")
-print(df_credits_clean.filter((size(col("crew")) == 0) & (size(col("cast")) == 0)).count())
+#print("Cols with no crew and no cast, that will be removed")
+#print(df_credits_clean.filter((size(col("crew")) == 0) & (size(col("cast")) == 0)).count())
 df_credits_clean = df_credits_clean.filter((size(col("crew")) != 0) | (size(col("cast")) != 0))
 #print(df_credits_clean.select(col("id")).filter(size(col("crew")) == 0).collect())
 
@@ -296,10 +296,10 @@ df_crew_merge = df_crew_merge.groupBy("id").agg(
 
 
 df_final = df_crew_merge.join(df_cast_merge, on="id", how="outer")
-df_final.show()
-df_final.printSchema()
-print("number of rows")
-print(df_final.count())
+#df_final.show()
+#df_final.printSchema()
+#print("number of rows")
+#print(df_final.count())
 
 df_final.write.parquet("ingest/silver/credits/", mode="overwrite")
 df_final.write.json("ingest/silver/credits_json/", mode="overwrite")

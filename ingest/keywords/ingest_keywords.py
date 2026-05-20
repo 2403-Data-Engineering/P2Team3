@@ -2,6 +2,7 @@ import os, sys, re
 from pyspark.sql import SparkSession
 from pyspark.sql.types import IntegerType, StringType, ArrayType, StructField, StructType
 from pyspark.sql.functions import from_json, col, regexp_replace, when, concat, lit
+from json_repair import repair_json
 
 os.environ["PYSPARK_PYTHON"] = f"{sys.executable}"
 os.environ["PYSPARK_DRIVER_PYTHON"] = f"{sys.executable}"
@@ -16,10 +17,12 @@ def clean_csv(inputpath, outputpath):
     text = ''
     with open(inputpath, 'r', encoding='utf-8') as file:
         text = file.read()
+        text = repair_json(text)
 
     text = re.sub(r'""([^"]+)""', r"'\1'", text)
     with open(outputpath, 'w', encoding='utf-8') as file:
         file.write(text)
+    
 
 
 singlekey_schema = StructType([
@@ -46,6 +49,7 @@ spark = (
 
 df = spark.read.csv(path=output_path, header=True, schema=flat_schema)
 df.orderBy('id').show()
+
 
 df_new = (
     df

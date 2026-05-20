@@ -7,7 +7,7 @@ os.environ["PYSPARK_DRIVER_PYTHON"] = f'{sys.executable}'
 from datetime import datetime
 
 from pyspark.sql.types import IntegerType, StringType, ArrayType, StructField, StructType, MapType, BooleanType, DoubleType, DateType
-from pyspark.sql.functions import col, udf, to_date, first, collect_list
+from pyspark.sql.functions import col, udf, to_date, first, collect_list, flatten
 
 
 spark = SparkSession.builder.appName("MovieMetadata").getOrCreate()
@@ -392,7 +392,7 @@ def str_to_bool(s:str):
         return mapping[s]
     return None
 
-@udf
+@udf(returnType=ArrayType(StringType()))
 def combine_lists(lists):
     result = {x for sublist in lists for x in sublist}
     return list(result)
@@ -416,9 +416,9 @@ df_meta_clean = (
 df_genre_merge = df_meta_clean.select("*")\
         .groupBy(col("id"))\
         .agg(
-            collect_list("genres").alias("genres"),
-            collect_list("spoken_languages").alias("spoken_languages"),
-            collect_list("production_companies").alias("production_companies"),
+            flatten(collect_list("genres")).alias("genres"),
+            flatten(collect_list("spoken_languages")).alias("spoken_languages"),
+            flatten(collect_list("production_companies")).alias("production_companies"),
             first("tagline", ignorenulls=True).alias("tagline"),
             first("release_date", ignorenulls=True).alias("release_date"),
             first("overview", ignorenulls=True).alias("overview"),
@@ -426,11 +426,14 @@ df_genre_merge = df_meta_clean.select("*")\
             first("belongs_to_collection", ignorenulls=True).alias("belongs_to_collection"),
             first("adult", ignorenulls=True).alias("adult")
         )
-df_genre_merge = df_genre_merge.withColumn("genres", combine_lists(col("genres")))\
-        .withColumn("spoken_languages", combine_lists(col("spoken_languages")))\
-        .withColumn("production_companies", combine_lists(col("production_companies")))
+
+
+
+ 
 df_genre_merge = df_genre_merge.dropna(subset=["id","title"])
 df_genre_merge = df_genre_merge.filter(col("title") != "")
 
+
+df_genre_merge.printSchema()
 df_genre_merge.write.json("ingest/silver/movie_metadata_json", mode="overwrite")
 df_genre_merge.write.parquet("ingest/silver/movie_metadata/", mode="overwrite")

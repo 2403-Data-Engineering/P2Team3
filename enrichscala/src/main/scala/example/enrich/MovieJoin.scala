@@ -21,7 +21,22 @@ object MovieJoin {
   .join(credits, movies("id") === credits("id"), "left")
   .join(keywords, movies("id") === keywords("id"), "left")
   .join(ratingsAgg, movies("id") === ratingsAgg("movieId"), "left")
-  .select(movies("id"), col("genres"), col("spoken_languages"), col("production_companies"), col("tagline"),col("release_date"), col("overview"), col("title"), col("cast"), col("crew"), col("avg_rating"), col("rating_count"), col("keywords"))
+  .select(movies("id"), 
+      col("genres"), 
+      col("spoken_languages"), 
+      col("production_companies"), 
+      col("tagline"),
+      col("release_date"), 
+      col("overview"), 
+      col("title"), 
+      col("cast"), 
+      col("crew"), 
+      col("avg_rating"), 
+      col("rating_count"), 
+      col("keywords"),
+      col("belongs_to_collection"),
+      col("adult")
+  )
   /*
     var m = movies
   m=movies.join(credits, movies("id") === credits("id"), "left")

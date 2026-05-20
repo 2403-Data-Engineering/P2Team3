@@ -1,3 +1,25 @@
+error id: file:///D:/Revature/P2Team3/enrichscala/src/main/scala/example/EnrichData.scala:FeatureBuilder.
+file:///D:/Revature/P2Team3/enrichscala/src/main/scala/example/EnrichData.scala
+empty definition using pc, found symbol in pc: 
+empty definition using semanticdb
+empty definition using fallback
+non-local guesses:
+	 -org/apache/spark/sql/functions/FeatureBuilder.
+	 -org/apache/spark/sql/functions/FeatureBuilder#
+	 -org/apache/spark/sql/functions/FeatureBuilder().
+	 -enrich/FeatureBuilder.
+	 -enrich/FeatureBuilder#
+	 -enrich/FeatureBuilder().
+	 -FeatureBuilder.
+	 -FeatureBuilder#
+	 -FeatureBuilder().
+	 -scala/Predef.FeatureBuilder.
+	 -scala/Predef.FeatureBuilder#
+	 -scala/Predef.FeatureBuilder().
+offset: 171
+uri: file:///D:/Revature/P2Team3/enrichscala/src/main/scala/example/EnrichData.scala
+text:
+```scala
 package example
 
 import org.apache.spark.sql.SparkSession
@@ -5,7 +27,7 @@ import org.apache.spark.sql.functions._
 
 import enrich.RatingsAgg
 import enrich.MovieJoin
-import enrich.FeatureBuilder
+import enrich.Fe@@atureBuilder
 
 
 object EnrichData {
@@ -84,8 +106,7 @@ object EnrichData {
     goldDf.printSchema()
     goldDf.show()
 
-    //goldDf.write.mode("overwrite").json("D:/Revature/P2Team3/enrichscala/output/keywords")
-    goldDf.write.mode("overwrite").parquet("D:/Revature/P2Team3/enrichscala/output/")
+    goldDf.write.mode("overwrite").json("D:/Revature/P2Team3/enrichscala/output/keywords")
     // -----------------------------
     // Optional debug (uncomment if needed)
     // -----------------------------
@@ -100,3 +121,9 @@ object EnrichData {
     println("Gold layer completed successfully.")
   }
 }
+```
+
+
+#### Short summary: 
+
+empty definition using pc, found symbol in pc: 

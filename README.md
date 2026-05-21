@@ -29,7 +29,9 @@ root
 
 ## Credits - Gui
  We decided to keep most of the data in the bronze step, as we did not know what to expect later in development, when we moved on to the silver layer we decided to drop many columns that would not add a lot of meaning. 
+ 
  In terms of duplicates handling, we decided to merge the name, character, and crew name columns, as a duplicate row could have data that the other rows did not have.
+ 
  We only dropped rows that had the wrong number of columns, empty cast and crew arrays, or null values for id.
 ### Silver Schema
 ```

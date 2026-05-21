@@ -27,6 +27,49 @@ root
  |-- adult: boolean (nullable = true)
 ```
 
+## Credits - Gui
+ We decided to keep most of the data in the bronze step, as we did not know what to expect later in development, when we moved on to the silver layer we decided to drop many columns that would not add a lot of meaning. 
+ In terms of duplicates handling, we decided to merge the name, character, and crew name columns, as a duplicate row could have data that the other rows did not have.
+ We only dropped rows that had the wrong number of columns, empty cast and crew arrays, or null values for id.
+### Silver Schema
+```
+root                                                                            
+ |-- id: integer (nullable = true)
+ |-- crew: array (nullable = true)
+ |    |-- element: struct (containsNull = false)
+ |    |    |-- department: string (nullable = true)
+ |    |    |-- job: string (nullable = true)
+ |    |    |-- name: string (nullable = true)
+ |    |    |-- profile_path: string (nullable = true)
+ |    |    |-- gender: integer (nullable = true)
+ |    |    |-- person_id: integer (nullable = true)
+ |    |    |-- credit_id: string (nullable = true)
+ |-- cast: array (nullable = true)
+ |    |-- element: struct (containsNull = false)
+ |    |    |-- cast_id: integer (nullable = true)
+ |    |    |-- character: string (nullable = true)
+ |    |    |-- name: string (nullable = true)
+ |    |    |-- profile_path: string (nullable = true)
+ |    |    |-- gender: integer (nullable = true)
+ |    |    |-- person_id: integer (nullable = true)
+ |    |    |-- order: integer (nullable = true)
+ |    |    |-- credit_id: string (nullable = true)
+```
+### Gold Schema
+```
+root                                                                            
+ |-- id: integer (nullable = true)
+ |-- cast_names: array (nullable = true)
+ |    |-- element: string (containsNull = true)
+ |-- character_names: array (nullable = true)
+ |    |-- element: string (containsNull = true)
+ |-- directors: array (nullable = true)
+ |    |-- element: string (containsNull = true)
+ |-- crew_names: array (nullable = true)
+ |    |-- element: string (containsNull = true)
+```
+
+
 # Keywords
 - Keywords.csv file only had columns for id (joins to metadata) and stringified json list of keywords, so no columns were removed
 #### Formatting issue in reading csv:

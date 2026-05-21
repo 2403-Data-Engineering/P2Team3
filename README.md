@@ -26,3 +26,18 @@ root
  |-- belongs_to_collection: string (nullable = true)
  |-- adult: boolean (nullable = true)
 ```
+
+# Keywords
+- Keywords.csv file only had columns for id (joins to metadata) and stringified json list of keywords, so no columns were removed
+#### Formatting issue in reading csv:
+Some rows in keywords.csv had two double-quotes around certain words (""like this"") which structurally breaks that row when trying to read it into spark. We had to physically edit the csv file to remove this issue, which was not ideal.
+#### Single quote conversion:
+Parsing a json-like string in spark requires double quotes surrounding each attribute and value, whereas keywords.csv uses single-quote. We had to use regex replacement to replace all instances of single quote without affecting values that have an actual apostrophe (it's row would break otherwise).
+#### Bracket corruption:
+Some rows in the csv file start by immediately listing json objects {} separated by commas instead of being in a list, we used regex to add brackets to the beginning and end of a string if they didn't exist prior.
+#### Handling duplicates and nulls:
+While there weren't exactly "null" values, there were empty keyword lists []; these rows were dropped since they would not provide any value when joined with metadata. To handle exact duplicates, we used .distinct() on the dataframe before writing to parquet. For keywords specifically, we did not consider near-duplicate values since it's alright for multiple movies to have similar keywords.
+#### /xa0 issues:
+/xao is an ASCII non-breaking space character in extended ASCII. It doesn't cause issues with reading into a spark string column, but causes null values when parsed, so we used regex replace to remove these artifacts.
+### Incomplete Json:
+We decided to simply drop rows with incomplete json objects due to time constraints, if we had more time we would have applied advanced json-repairing methods to all of the ingestion phase.

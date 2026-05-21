@@ -22,6 +22,8 @@ print("Connected:", client.is_ready())
 if client.collections.exists("Movie"):
     client.collections.delete("Movie")
 
+
+
 client.collections.create(
     name="Movie",
     vectorizer_config=wc.Configure.Vectorizer.text2vec_transformers(),
@@ -33,7 +35,7 @@ client.collections.create(
         wc.Property(name="cast_names", data_type=wc.DataType.TEXT_ARRAY, skip_vectorization=True),
         wc.Property(name="directors", data_type=wc.DataType.TEXT_ARRAY, skip_vectorization=True),
         wc.Property(name="crew_names", data_type=wc.DataType.TEXT_ARRAY, skip_vectorization=True),
-        wc.Property(name="release_date", data_type=wc.DataType.DATE, skip_vectorization=True),
+        wc.Property(name="release_date", data_type=wc.DataType.TEXT, skip_vectorization=True),
         wc.Property(name="production_companies", data_type=wc.DataType.TEXT_ARRAY, skip_vectorization=True),
         wc.Property(name="adult", data_type=wc.DataType.BOOL, skip_vectorization=True),
         wc.Property(name="avg_rating", data_type=wc.DataType.NUMBER, skip_vectorization=True),
@@ -90,7 +92,7 @@ with movies.batch.dynamic() as batch:
             "cast_names": row.cast_names,
             "crew_names": row.crew_names,
             "directors": row.directors,
-            "release_date": row.release_date,
+            "release_date":  str(row.release_date) if row.release_date else None,
             "production_companies": row.production_companies,
             "adult": row.adult,
             "avg_rating": row.avg_rating,

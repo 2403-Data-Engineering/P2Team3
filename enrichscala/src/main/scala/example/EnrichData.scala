@@ -84,7 +84,7 @@ object EnrichData {
     goldDf.printSchema()
     goldDf.show()
 
-    //goldDf.write.mode("overwrite").json("D:/Revature/P2Team3/enrichscala/output/keywords")
+    goldDf.write.mode("overwrite").json("D:/Revature/P2Team3/enrichscala/output/keywords")
     goldDf.write.mode("overwrite").parquet("D:/Revature/P2Team3/enrichscala/output/parquet")
     // -----------------------------
     // Optional debug (uncomment if needed)

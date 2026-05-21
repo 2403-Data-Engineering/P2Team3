@@ -22,7 +22,15 @@ object FeatureBuilder {
         array_join(col("keywords"), " "),   
         col("belongs_to_collection"),
         array_join(col("genres"), " ")
-        ) ) 
+        ) )
+  .withColumn("character_names", array_remove(col("character_names"),   null.asInstanceOf[String]))
+  .withColumn("cast_names",       array_remove(col("cast_names"),       null.asInstanceOf[String]))
+  .withColumn("crew_names",       array_remove(col("crew_names"),       null.asInstanceOf[String]))
+  .withColumn("directors",        array_remove(col("directors"),        null.asInstanceOf[String]))
+  .withColumn("keywords",         array_remove(col("keywords"),         null.asInstanceOf[String]))
+  .withColumn("genres",           array_remove(col("genres"),           null.asInstanceOf[String]))
+  .withColumn("spoken_languages", array_remove(col("spoken_languages"), null.asInstanceOf[String]))
+  .withColumn("production_companies", array_remove(col("production_companies"), null.asInstanceOf[String]))
   //embedding
 //"title characters actors directors tagline overview rating keyword genre collection"
   //production_companies, cast_names, directors, keywords, genre

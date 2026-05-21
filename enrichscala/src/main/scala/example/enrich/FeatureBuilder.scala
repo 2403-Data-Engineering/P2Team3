@@ -23,14 +23,26 @@ object FeatureBuilder {
         col("belongs_to_collection"),
         array_join(col("genres"), " ")
         ) )
-  .withColumn("character_names", array_remove(col("character_names"),   null.asInstanceOf[String]))
-  .withColumn("cast_names",       array_remove(col("cast_names"),       null.asInstanceOf[String]))
-  .withColumn("crew_names",       array_remove(col("crew_names"),       null.asInstanceOf[String]))
-  .withColumn("directors",        array_remove(col("directors"),        null.asInstanceOf[String]))
-  .withColumn("keywords",         array_remove(col("keywords"),         null.asInstanceOf[String]))
-  .withColumn("genres",           array_remove(col("genres"),           null.asInstanceOf[String]))
-  .withColumn("spoken_languages", array_remove(col("spoken_languages"), null.asInstanceOf[String]))
-  .withColumn("production_companies", array_remove(col("production_companies"), null.asInstanceOf[String]))
+  .na.fill("n/a")
+  .na.fill(0)
+  .na.fill(0.0)
+  .withColumn("character_names", filter(col("character_names"), x => x.isNotNull))
+  .withColumn("character_names", when(col("character_names").isNull, array(lit(""))).otherwise(col("character_names")))
+  .withColumn("cast_names", filter(col("cast_names"), x => x.isNotNull))
+  .withColumn("cast_names", when(col("cast_names").isNull, array(lit(""))).otherwise(col("cast_names")))
+  .withColumn("keywords",filter(col("keywords"), x => x.isNotNull))
+  .withColumn("keywords", when(col("keywords").isNull, array(lit(""))).otherwise(col("keywords")))
+  .withColumn("directors", filter(col("directors"), x => x.isNotNull))
+  .withColumn("directors", when(col("directors").isNull, array(lit(""))).otherwise(col("directors")))
+  .withColumn("crew_names", filter(col("crew_names"), x => x.isNotNull))
+  .withColumn("crew_names", when(col("crew_names").isNull, array(lit(""))).otherwise(col("crew_names")))
+    .withColumn("spoken_languages", filter(col("spoken_languages"), x => x.isNotNull))
+  .withColumn("spoken_languages", when(col("spoken_languages").isNull, array(lit(""))).otherwise(col("spoken_languages")))
+    .withColumn("production_companies", filter(col("production_companies"), x => x.isNotNull))
+  .withColumn("production_companies", when(col("production_companies").isNull, array(lit(""))).otherwise(col("production_companies")))
+
+  //.withColumn("character_names", when(col("character_names").isNull, array()).otherwise(col("character_names")))
+
   //embedding
 //"title characters actors directors tagline overview rating keyword genre collection"
   //production_companies, cast_names, directors, keywords, genre

@@ -81,9 +81,16 @@ object EnrichData {
     // Step 3: Feature engineering
     // -----------------------------
     val goldDf = FeatureBuilder.build(joined)
+    
+    
     goldDf.printSchema()
     goldDf.show()
 
+    /*goldDf.withColumn("null_chars", size(filter(col("character_names"), x => x.isNull)))
+    .withColumn("null_casts", size(filter(col("cast_names"), x => x.isNull)))
+    .filter(col("null_chars") > 0 || col("null_casts") > 0)
+    .select("title", "null_chars", "null_casts", "character_names", "cast_names").show()*/
+    //goldDf.filter(col("character_names").isNull.or(size(col("character_names")) === 0)).show()
     goldDf.write.mode("overwrite").json("D:/Revature/P2Team3/enrichscala/output/keywords")
     goldDf.write.mode("overwrite").parquet("D:/Revature/P2Team3/enrichscala/output/parquet")
     // -----------------------------

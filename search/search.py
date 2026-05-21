@@ -17,11 +17,20 @@ for obj in response.objects:
 
 #query = "Taylor Swift breakup songs"
 query = input("Search: ")
+'''
+response = songs.query.near_text(
+    query=query,
+    limit=5,
+    return_metadata=MetadataQuery(distance=True))
 
+for obj in response.objects:
+    print(f"  {obj.properties['title']} — {obj.properties['overview']}\n ")
+
+'''
 for alpha in [1.0, 0.5, 0.0]:
     print(f"\n=== Hybrid search, alpha={alpha} ===")
     response = songs.query.hybrid(query=query, limit=5, alpha=alpha)
     for obj in response.objects:
-        print(f"  {obj.properties['title']} — {obj.properties['artist']}")
+        print(f"  {obj.properties['title']} — {obj.properties['overview']} - {obj.properties['cast_names']}\n")
 
 client.close()
